@@ -1,0 +1,36 @@
+@startuml userCaseDiagram
+
+left to right direction
+actor "User" as user
+rectangle flight {
+   usecase "Search" as search
+   usecase "Manage booking" as managebooking
+   usecase "Check-in" as checkin
+   usecase "Member" as member
+   usecase "Extra service" as extraservice
+   usecase "Payment" as payment
+   usecase "Login" as login
+   usecase "register" as register
+   usecase "Select seat" as selecttickets
+   usecase "Select flight" as selectflight
+   usecase "Change flight"as changeflight
+   usecase "Cancel flight"as cancelflight
+}
+
+user -- managebooking
+user -- search
+user -- checkin
+user -- member
+selecttickets -up-> selectflight:extend
+selectflight -up-> search:extend
+extraservice -up-> selecttickets:extend
+payment -up-> extraservice:extend
+managebooking -->login:include
+payment -->login:include
+checkin -->login:include
+member -down-> register:include
+member -down-> login:include
+changeflight -up-> managebooking:extend
+cancelflight -up-> managebooking:extend
+
+@enduml

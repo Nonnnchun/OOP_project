@@ -1,0 +1,24 @@
+(https://www.figma.com/design/qlb2Gg6SUI7CbyBQSbMw8d/OOP?node-id=0-1&t=AquWjl2y4iMrDZPT-1) : Figma
+
+work flow (DevOps) plan / code / build / test / moniter
+https://www.nokair.com/ : only จองต๋วเครื่องบิน
+
+1.first week
+
+Figma : ออกแบบหน้าจอเว็บ แต่ละหน้า
+Output : application interface หน้านึงควรมีอะไรบ้าง มีกี่หน้า แต่ละหน้าinteractกันยังไง
+
+
+software design : class diagram
+user interface design : user case diagram
+Output : ของการออกแบบมักอยู่ในรูปของ Diagram โดยส่วนของโครงสร้างการทํางาน
+ในแบบ Object Oriented จะได้เป็น Class Diagram, Sequence Diagram และอื่นๆ
+ในส่วนของ UI Design ก็จะได้เป็น Wireframe หรือ UI Screen
+
+
+
+2.other week
+Tester : ทำเป็นประจำเพื่อให้เพิ่มลดโค้ด หรือดัดแปลงในอนาคตได้ง่าย
+
+เขียนโค้ด ทุกคน GitHub merge
+(ปล.แก้ไขเพิ่มลดข้อความนี้ได้ หรือเสนอใดๆบลาๆ)
