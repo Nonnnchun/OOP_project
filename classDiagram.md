@@ -7,11 +7,12 @@ class Flight {
       -destination
       -departure_time
       -arrive_time
-      -airline
-      -seatclass
+
+      -PLane
       -flightType
       -layovers
       +Flightsearch()
+      +Flightfilter()
 }
 
 class SeatClass {
@@ -23,35 +24,38 @@ class SeatClass {
 class Airport{
       -name
 }
+class Plane{
+      -plane_id
+      -aircraft
+      -seatclass
+
+}
 
 class Booking {
-      -booking_id
-      -user
+      -booking_reference
+      -payment
       -status
-
+      -flight
+      -passengerDetail list
+      -promocode_discount
+      -price
+      +editBooking()
+      +price_cal()
 }
 
 class Payment {
       -ticket_price
-      -type
       -amount
-}
-
-class Ticket {
-      -ticket_id
-      -seatclass
-      -passengerType
-      -promocode_discount
-      -price
-      +price_cal()
+      +processPayment()
 }
 
 class User {
       -email
       -point
+      -PurchesedHistory
       +login()
       +register()
-      +Use_point()
+      +Usepoint()
 }
 
 class Promocode{
@@ -65,13 +69,20 @@ class FlightType{
       -name
 }
 
+class PassengerDetail{
+      -paassengerType
+      -passengerName
+      -contact
+      -Birthday
+}
+
 class PassengerType{
       -type
       -discount_percent
 }
 
-class PerchasedHistory{
-      -user
+class PurchasedHistory{
+      -booking
 }
 
 class Membership{
@@ -86,21 +97,23 @@ SeatClass <|-- PremiumEconClass
 FlightType <|-- DirectFlight
 FlightType <|-- OneStop
 FlightType <|-- TwoStop
-PassengerType <|-- Adult
-PassengerType <|-- Child
-PassengerType <|-- Todler
+PassengerDetail --> PassengerType
 Payment <|-- OnlineBanking
 Payment <|-- Card
 Card <|-- Credit_Card
 Card <|-- Debit_Card
-Flight o-- SeatClass
-Flight o-- Airport
+Flight o-- Airport 
+Plane o-- SeatClass
 Flight o-- FlightType
-Flight o-- Booking
-Booking <-- Ticket
-Ticket <-- Payment
-Ticket <-- PassengerType
-Ticket <-- Promocode
-User <-- PerchasedHistory
+Flight "1" o-- "*" Booking
+Booking --> Payment
+Booking <-- SeatClass
+Booking --> PassengerDetail
+Booking --> Promocode
+User "1" <-- "*" Booking
+User --> PurchasedHistory
 User <-- Membership
 Promocode -- User
+PurchasedHistory <-- Booking
+Flight o-- Plane
+Plane <-- SeatClass
