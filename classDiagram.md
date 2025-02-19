@@ -3,32 +3,27 @@
 classDiagram
 
 class Flight {
-      -origin
-      -destination
-      -departure_time
-      -arrive_time
-
-      -PLane
-      -flightType
-      -layovers
-      +Flightsearch()
-      +Flightfilter()
+      -plane
+      -flightRoute_list
+      +flightsearch()
+      +flightfilter()
 }
 
 class SeatClass {
-      -name
-      -price
-      -seat_available
+      -seat_id
+      -seat_type
 }
+
 
 class Airport{
       -name
 }
+
+
 class Plane{
       -plane_id
       -aircraft
       -seatclass
-
 }
 
 class Booking {
@@ -55,25 +50,28 @@ class User {
       -PurchesedHistory
       +login()
       +register()
-      +Usepoint()
+      +usepoint()
 }
 
 class Promocode{
       -code
       -discount_percent
       -expiration_date
-      +IsValid()
+      +isValid()
 }
 
-class FlightType{
-      -name
+class FlightRoute{
+      -origin
+      -destination
+      -departure_time
+      -arrive_time
 }
 
 class PassengerDetail{
       -paassengerType
       -passengerName
       -contact
-      -Birthday
+      -birthday
 }
 
 class PassengerType{
@@ -90,13 +88,7 @@ class Membership{
       -discount_percent
 }
 
-SeatClass <|-- BusinessClass
-SeatClass <|-- EconClass
-SeatClass <|-- FirstClass
-SeatClass <|-- PremiumEconClass
-FlightType <|-- DirectFlight
-FlightType <|-- OneStop
-FlightType <|-- TwoStop
+
 PassengerDetail --> PassengerType
 Payment <|-- OnlineBanking
 Payment <|-- Card
@@ -104,16 +96,16 @@ Card <|-- Credit_Card
 Card <|-- Debit_Card
 Flight o-- Airport 
 Plane o-- SeatClass
-Flight o-- FlightType
-Flight "1" o-- "*" Booking
+Flight o-- FlightRoute
+Flight "1" --o "" Booking
 Booking --> Payment
 Booking <-- SeatClass
 Booking --> PassengerDetail
 Booking --> Promocode
-User "1" <-- "*" Booking
+User "1" <-- "" Booking
 User --> PurchasedHistory
 User <-- Membership
 Promocode -- User
 PurchasedHistory <-- Booking
 Flight o-- Plane
-Plane <-- SeatClass
+Plane --> SeatClass

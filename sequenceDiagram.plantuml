@@ -1,0 +1,61 @@
+@startuml
+
+actor "User" as user
+participant Flight
+participant FliteRoute
+participant PassengerDetails
+participant Promocode
+participant SeatClass
+participant ExtraServices
+participant Booking
+participant payment
+participant "Check-in Database" as checkinDB
+
+== ค้นหาเที่ยวบินและรายละเอียด ==
+user -> Flight: Search Flight
+activate Flight
+Flight -> FliteRoute: Fetch available flights
+deactivate Flight
+activate FliteRoute
+FliteRoute ->PassengerDetails: Select Passenger Details
+deactive FliteRoute
+
+PassengerDetails -> Promocode : Enter Promocode
+Promocode --> Flight: Return flight list
+Flight --> user: Display flight options
+
+== เลือกเที่ยวบินและที่นั่ง ==
+user -> Flight: Select Flight
+Flight -> SeatClass: Select seat class & Fetch available seats 
+SeatClass -> ExtraServices : Select Extra Services
+ExtraServices --> Flight: Return seat options
+Flight --> user: Display available seats
+user -> Flight: Select Seat
+
+== ทำการจองและชำระเงิน ==
+user -> Flight: Proceed to Booking
+Flight -> Booking: Create Booking Entry
+Booking --> Flight: Generate Booking Reference
+user -> Flight: Enter Payment Details
+Flight -> payment: Process Payment
+payment --> Flight: Payment Success
+Flight -> Booking: Update Booking Status (Confirmed)
+Flight --> user: Booking Confirmed
+
+== จัดการการจอง (เปลี่ยน/ยกเลิกเที่ยวบิน) ==
+user -> Flight: Request Change/Cancellation
+Flight -> Booking: Fetch Booking Details
+Booking --> Flight: Return Booking Details
+user -> Flight: Confirm Change/Cancellation
+Flight -> payment: Process Refund (if applicable)
+payment --> Flight: Refund Processed
+Flight -> Booking: Update Booking Status
+Flight --> user: Change/Cancellation Confirmed
+
+== เช็คอินออนไลน์ ==
+user -> Flight: Request Online Check-in
+Flight -> checkinDB: Verify Booking & Generate Boarding Pass
+checkinDB --> Flight: Boarding Pass Ready
+Flight --> user: Display Boarding Pass
+
+@enduml
