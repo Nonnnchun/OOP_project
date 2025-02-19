@@ -3,7 +3,7 @@
 actor "User" as user
 participant Flight
 participant FliteRoute
-participant PassengerDetails
+participant PassengerType
 participant Promocode
 participant SeatClass
 participant ExtraServices
@@ -17,11 +17,11 @@ loop
    activate Flight #BBBBBB
    Flight -> FliteRoute: Fetch available flights
    activate FliteRoute #FFBBBB
-   FliteRoute ->PassengerDetails: Select Passenger Details
+   FliteRoute ->PassengerType: Select Passenger Details
    deactivate FliteRoute 
-   activate PassengerDetails #FFBBBB
-   PassengerDetails -> Promocode : Enter Promocode
-   deactivate PassengerDetails
+   activate PassengerType #FFBBBB
+   PassengerType -> Promocode : Enter Promocode
+   deactivate PassengerType
    activate Promocode #FFBBBB
    Promocode --> Flight: Return flight list
    deactivate Promocode
@@ -29,38 +29,22 @@ loop
    deactivate Flight
 end
 
-== เลือกเที่ยวบินและที่นั่ง ==
-user -> Flight: Select Flight
-Flight -> SeatClass: Select seat class & Fetch available seats 
-SeatClass -> ExtraServices : Select Extra Services
-ExtraServices --> Flight: Return seat options
-Flight --> user: Display available seats
-user -> Flight: Select Seat
+== เลือกเที่ยวบินและประเภทที่นั่ง ==
+
+
+== ข้อมูลผู้โดยสาร ==
+
+
+== บริการเสริม ==
+
 
 == ทำการจองและชำระเงิน ==
-user -> Flight: Proceed to Booking
-Flight -> Booking: Create Booking Entry
-Booking --> Flight: Generate Booking Reference
-user -> Flight: Enter Payment Details
-Flight -> payment: Process Payment
-payment --> Flight: Payment Success
-Flight -> Booking: Update Booking Status (Confirmed)
-Flight --> user: Booking Confirmed
+
 
 == จัดการการจอง (เปลี่ยน/ยกเลิกเที่ยวบิน) ==
-user -> Flight: Request Change/Cancellation
-Flight -> Booking: Fetch Booking Details
-Booking --> Flight: Return Booking Details
-user -> Flight: Confirm Change/Cancellation
-Flight -> payment: Process Refund (if applicable)
-payment --> Flight: Refund Processed
-Flight -> Booking: Update Booking Status
-Flight --> user: Change/Cancellation Confirmed
+
 
 == เช็คอินออนไลน์ ==
-user -> Flight: Request Online Check-in
-Flight -> checkinDB: Verify Booking & Generate Boarding Pass
-checkinDB --> Flight: Boarding Pass Ready
-Flight --> user: Display Boarding Pass
+
 
 @enduml
