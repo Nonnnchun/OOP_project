@@ -12,17 +12,22 @@ participant payment
 participant "Check-in Database" as checkinDB
 
 == ค้นหาเที่ยวบินและรายละเอียด ==
-user -> Flight: Search Flight
-activate Flight
-Flight -> FliteRoute: Fetch available flights
-deactivate Flight
-activate FliteRoute
-FliteRoute ->PassengerDetails: Select Passenger Details
-deactive FliteRoute
-
-PassengerDetails -> Promocode : Enter Promocode
-Promocode --> Flight: Return flight list
-Flight --> user: Display flight options
+loop 
+   user -> Flight: Search Flight
+   activate Flight #BBBBBB
+   Flight -> FliteRoute: Fetch available flights
+   activate FliteRoute #FFBBBB
+   FliteRoute ->PassengerDetails: Select Passenger Details
+   deactivate FliteRoute 
+   activate PassengerDetails #FFBBBB
+   PassengerDetails -> Promocode : Enter Promocode
+   deactivate PassengerDetails
+   activate Promocode #FFBBBB
+   Promocode --> Flight: Return flight list
+   deactivate Promocode
+   Flight --> user: Display flight options
+   deactivate Flight
+end
 
 == เลือกเที่ยวบินและที่นั่ง ==
 user -> Flight: Select Flight
