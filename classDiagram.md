@@ -3,7 +3,7 @@
 classDiagram
     direction TB
     class Controller {
-        -plane
+        -plane_list
         -account_list
         -flightRoute_list
         +flightsearch()
@@ -21,7 +21,7 @@ classDiagram
     class Plane{
         -plane_id
         -aircraft
-        -seatclass
+        -seat
 
     }
 
@@ -52,7 +52,7 @@ classDiagram
     class Account {
         -password
         -email
-        -PurchesedHistory
+        -PurchasedHistory
         -Userdetail
         +login()
         +register()
@@ -91,7 +91,7 @@ classDiagram
     }
 
     class PassengerDetail{
-        -paassengerType
+        -passengerType
         -passengerName
         -contact
         -birthday
@@ -111,17 +111,17 @@ classDiagram
     Card <|-- Credit_Card
     Card <|-- Debit_Card
     Controller o-- Airport 
-    Plane o-- SeatClass
+    Plane o-- Seat
     Controller o-- FlightRoute
     Controller "1" --o "" Booking
     Booking --> Payment
-    Booking <-- SeatClass
+    Booking <-- Seat
     Booking --> PassengerDetail
     Booking --> Promocode
     Account "1" <-- "" Booking
     Promocode -- Account
     Controller o-- Plane
-    Plane --> SeatClass
+    Plane --> Seat
     Account --> Userdetail
     Booking --> luggage
     Account --o Controller
