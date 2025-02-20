@@ -9,7 +9,7 @@ classDiagram
         +flightsearch()
     }
 
-    class SeatClass {
+    class Seat {
         -seat_id
         -seat_type
     }
