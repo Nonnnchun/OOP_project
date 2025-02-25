@@ -6,7 +6,7 @@ classDiagram
         -plane_list
         -account_list
         -flightRoute_list
-        +flightsearch()
+        +flight_search()
     }
 
     class Seat {

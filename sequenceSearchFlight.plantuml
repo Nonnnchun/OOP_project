@@ -1,0 +1,22 @@
+@startuml
+
+actor "User" as user
+participant Account
+participant Controller
+participant FlightRoute
+
+== Search flight ==
+
+loop
+   user -> Controller: want search flight
+   activate Controller #BBBBBB
+   Controller -> FlightRoute: flight_search()
+   activate FlightRoute #FFBBBB
+   FlightRoute -> FlightRoute: is_success() --> (Enter date, route, etc.)
+   FlightRoute --> Controller: return flight
+   deactivate FlightRoute
+   Controller --> user: deisplay_flight()
+   deactivate Controller
+end
+
+@enduml
