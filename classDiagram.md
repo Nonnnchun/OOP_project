@@ -69,8 +69,10 @@ classDiagram
         -phone_number
         -address
         -point
+        -promocode_list
         +editprofile()
         +usepoint()
+        +get_promocode
     }
     class Paymentmethod{
 
