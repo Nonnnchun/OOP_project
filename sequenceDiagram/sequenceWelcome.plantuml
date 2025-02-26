@@ -8,14 +8,14 @@ participant Account
 
    user -> Controller: Turn into the system
    activate Controller #BBBBBB
-   alt User is not have an account
+   alt User have an account
       Controller --> Account: login() ,login_page
       activate Account #FFBBBB
       Account -> Account: is_corret()
       Account --> Controller: user login
       Controller --> user : login successful
       deactivate Account
-   else User is have an account
+   else User is not have an account
       Controller --> Account: register()
       activate Account #FFBBBB
       Account -> Account: is_success()
