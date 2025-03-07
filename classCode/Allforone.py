@@ -3,6 +3,31 @@ class Controller:
         self.plane_list = []
         self.account_list = []
         self.flightRoute_list = []
+        self.is_logged_in = False
+    
+    def turn_into_system(self, user):
+        if not user.has_account():
+            self.account.register()
+            if self.account.is_success():
+                print("Register successful")
+            return self.auto_path_to_login(user)
+        else:
+            self.account.login()
+            if self.account.is_correct():
+                print("Login successful")
+                self.is_logged_in = True
+                self.display_home_page()
+
+    def auto_path_to_login(self, user):
+        self.account.login()
+        if self.account.is_correct():
+            print("Login successful")
+            self.is_logged_in = True
+            self.display_home_page()
+
+    def display_home_page(self):
+        print("Displaying home page")
+
 
     def flight_search(self):
         pass
@@ -28,6 +53,9 @@ class FlightRoute:
         self.destination = destination
         self.departure_time = departure_time
         self.arrive_time = arrive_time
+
+    def display_flight_results(self):
+        print("Display flight results")
 
 class Booking:
     def __init__(self, booking_reference, payment, status, flight, passenger_details, promocode_discount, price, luggage):
@@ -80,19 +108,39 @@ class DebitCard(Card):
         super().__init__()
 
 class Account:
-    def __init__(self, password, email, purchased_history, user_detail):
-        self.password = password
+    def __init__(self, email, password):
         self.email = email
-        self.purchased_history = purchased_history
-        self.user_detail = user_detail
+        self.password = password
+        self.purchased_history = []
+        self.userdetail = None
 
     def login(self):
+        print("Login Page")
         pass
-
-    def register(self):
+        # Implement login logic
+    
+    def register(self, email, password, userdetail):
+        print("Registering user")
+        self.email = email
+        self.password = password
+        self.userdetail = userdetail
+        # Implement registration logic
+    
+    def forgotpass(self):
+        print("Forgot Password Page")
         pass
-
-    def forgot_pass(self):
+        # Implement forgot password logic
+    
+    def is_correct(self):
+        # Implement validation
+        return True
+    
+    def is_success(self):
+        # Check if registration was successful
+        return True
+    
+    def return_home_page(self):
+        print("Returning Home Page")
         pass
 
     def get_booking_list(self):
@@ -116,6 +164,15 @@ class Account:
     def logout(self):
         pass
 
+# class User:
+#    def __init__(self, username, password):
+#       self.username = username
+#       self.password = password
+#       self.account_created = False
+
+#    def has_account(self):
+#       return self.account_created
+
 class UserDetail:
     def __init__(self, firstname, lastname, birthday, gender, identification, nationality, phone_number, address, point, promocode_list):
         self.firstname = firstname
@@ -127,17 +184,30 @@ class UserDetail:
         self.phone_number = phone_number
         self.address = address
         self.point = point
-        self.promocode_list = promocode_list
+        self.promocode_list = []
 
-    def edit_profile(self, firstname=None, lastname=None, phone_number=None, address=None):
-        if firstname:
-            self.firstname = firstname
-        if lastname:
-            self.lastname = lastname
-        if phone_number:
-            self.phone_number = phone_number
-        if address:
-            self.address = address
+    def editprofile(self, firstname=None, lastname=None, birthday=None, gender=None, identification=None, nationality=None, phone_number=None, address=None, point=None):
+        if firstname: self.firstname = firstname
+        if lastname: self.lastname = lastname
+        if birthday: self.birthday = birthday
+        if gender: self.gender = gender
+        if identification: self.identification = identification
+        if nationality: self.nationality = nationality
+        if phone_number: self.phone_number = phone_number
+        if address: self.address = address
+
+    def calculate_points(self, transactions):
+        total_points = 0
+        for transaction in transactions:
+            total_points += transaction['amount'] * 0.1  # Assuming 10% of transaction amount is converted to points
+        self.point += total_points
+        return total_points
+        
+    def usepoint(self, points):
+        if self.point >= points:
+            self.point -= points
+            return True
+        return False
 
     def get_promocode(self):
         return self.promocode_list

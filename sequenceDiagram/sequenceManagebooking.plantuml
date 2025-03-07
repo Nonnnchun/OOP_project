@@ -14,13 +14,17 @@ activate Controller #BBBBBB
 alt Edit_booking
     Controller -> Booking: edit_booking ()
     activate Booking #BBBBBB
-    Booking -> FlightRoute: get_available_flight ()
+    Booking -> FlightRoute: search_flight ()
     activate FlightRoute #BBBBBB
-    FlightRoute --> Booking: Return available_flights []
+    FlightRoute --> Booking: Return search_flights []
     deactivate FlightRoute
     Booking -> Seat:get_available_seat ()
     activate Seat #BBBBBB
-    Seat --> Booking:Return available_seat []
+    Seat --> Booking:Return search_seat []
+    deactivate Seat
+    Booking -> Seat:refund_seat()
+    activate Seat #BBBBBB
+    Seat--> Booking:Return refund_seat
     deactivate Seat
     Booking -> Seat:refund_seat()
     activate Seat #BBBBBB

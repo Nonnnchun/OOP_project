@@ -46,9 +46,9 @@ Controller -> Account : use points
 activate Account
 
 opt กรณีแต้มพอ
-    Account -> Promocode : apply discount
+    Account -> Promocode : apply point
     activate Promocode
-    Promocode --> Account : return updated discount
+    Promocode --> Account : return update new promocode
     deactivate Promocode
     Account --> Controller : return updated points
 else กรณีแต้มไม่พอ
@@ -63,9 +63,9 @@ deactivate Controller
 
 user -> Controller : get user acc
 activate Controller
-Controller -> Account : get user details
+Controller -> Account : get user detail()
 activate Account
-Account -> UserDetail : fetch details
+Account -> UserDetail : get user details()
 activate UserDetail
 UserDetail --> Account : return details
 deactivate UserDetail
@@ -74,11 +74,11 @@ deactivate Account
 Controller --> user : display profile info
 deactivate Controller
 
-user -> Controller : edit profile
+user -> Controller : get user acc
 activate Controller
-Controller -> Account : update profile
+Controller -> Account : edit profile()
 activate Account
-Account -> UserDetail : modify user details
+Account -> UserDetail : edit profile()
 activate UserDetail
 UserDetail --> Account : update successful
 deactivate UserDetail
@@ -91,17 +91,18 @@ deactivate Controller
 
 user -> Controller : get user acc
 activate Controller
-Controller -> Account : change password
+Controller -> Account : change password()
 activate Account
 
-alt ตรวจสอบรหัสผ่านเก่า
-    Account -> Account : verify old password
-    opt กรณีรหัสผ่านถูกต้อง
-        Account -> Account : update new password
+opt กรณีรหัสผ่านเก่าถูกต้อง
+    opt format ถูกต้อง
         Account --> Controller : success
-    else กรณีรหัสผิด
-        Account --> Controller : return "incorrect password"
+    else format ผิด
+        Account --> Controller : return "invalid format"
     end
+else กรณีรหัสผ่านเก่าผิด
+        Account --> Controller : return "incorrect password"`
+    
 end
 
 deactivate Account
