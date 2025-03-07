@@ -18,10 +18,13 @@ alt Edit_booking
     activate FlightRoute #BBBBBB
     FlightRoute --> Booking: Return available_flights []
     deactivate FlightRoute
-
     Booking -> Seat:get_available_seat ()
     activate Seat #BBBBBB
     Seat --> Booking:Return available_seat []
+    deactivate Seat
+    Booking -> Seat:refund_seat()
+    activate Seat #BBBBBB
+    Seat--> Booking:Return refund_seat
     deactivate Seat
     Booking --> Controller: Return Flight_Updated
     deactivate Booking
@@ -33,8 +36,14 @@ else Cancel_booking
     activate Payment #BBBBBB
     Payment --> Booking: Return Refund_Processed
     deactivate Payment
+    Booking -> Seat:refund_seat()
+    activate Seat #BBBBBB
+    Seat--> Booking:Return refund_seat
+    deactivate Seat
     Booking --> Controller: Return cancel_booking
+    
     deactivate Booking
+    
 end
 
 Controller -->user: Edit_booking/Cancel_booking Confirmed

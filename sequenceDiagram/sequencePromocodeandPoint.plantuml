@@ -1,0 +1,50 @@
+@startuml 
+
+actor "User" as user
+participant Controller
+participant Account
+participant Promocode
+
+
+== Promocode ==
+
+user -> Controller : get user acc
+activate Controller#BBBBBB
+Controller -> Account : get promocode
+activate Account#BBBBBB
+Account -> Promocode : get_available_promocode()
+activate Promocode#BBBBBB
+Promocode --> Account : return promocode
+deactivate Promocode
+Account --> Controller : return promocode_list
+deactivate Account
+Controller --> user : display promocodes
+deactivate Controller
+
+== Usepoint ==
+
+user -> Controller : get user acc
+activate Controller#BBBBBB
+Controller -> Account : use points
+activate Account#BBBBBB
+
+opt enough_point
+    Account -> Promocode : all_promocode
+    activate Promocode#BBBBBB
+    Promocode --> Account: Return all_promocode_list
+    deactivate
+    Account -> Promocode : exchange_to_promocode ()
+    activate Promocode#BBBBBB
+    Promocode --> Account : return updated promocode
+    deactivate Promocode
+    Account --> Controller : return updated points
+else not_enough_point
+    Account --> Controller : return "insufficient points"
+end
+
+deactivate Account
+Controller --> user : updated points shown
+
+deactivate Controller
+
+@enduml
