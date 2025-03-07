@@ -3,9 +3,10 @@
 left to right direction
 actor "User" as user
 rectangle flight {
+   usecase "Welcomepage" as welcomepage
    usecase "Search" as search
    usecase "Manage booking" as managebooking
-   usecase "Check-in" as checkin
+   usecase "Promocode" as promocode
    usecase "Payment" as payment
    usecase "Login" as login
    usecase "register" as register
@@ -13,8 +14,10 @@ rectangle flight {
    usecase "Select flight&type" as selectflight
    usecase "Passenger Info"as passengerinfo
    usecase "Homepage"  as homepage
+   usecase "Change Password"  as changepassword
 }
-user -- register 
+user -- welcomepage
+register -up-> welcomepage:extend
 register --> login:include
 login --> homepage:include
 search -up-> homepage:extend
@@ -23,5 +26,6 @@ selectseats -up-> selectflight:extend
 passengerinfo -up-> selectseats:extend
 payment -up-> passengerinfo:extend
 managebooking -up-> homepage:extend
-checkin -up-> homepage:extend
+promocode -up-> homepage:extend
+changepassword -up-> homepage:extend
 @enduml
