@@ -164,14 +164,6 @@ class Account:
     def logout(self):
         pass
 
-# class User:
-#    def __init__(self, username, password):
-#       self.username = username
-#       self.password = password
-#       self.account_created = False
-
-#    def has_account(self):
-#       return self.account_created
 
 class UserDetail:
     def __init__(self, firstname, lastname, birthday, gender, identification, nationality, phone_number, address, point, promocode_list):

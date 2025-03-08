@@ -3,6 +3,7 @@
 left to right direction
 actor "User" as user
 rectangle flight {
+   usecase "Welcomepage" as welcomepage
    usecase "Search" as search
    usecase "Booking management" as managebooking
    usecase "Promocode" as promocode
@@ -15,7 +16,8 @@ rectangle flight {
    usecase "Homepage"  as homepage
    usecase "Change Password"  as changepassword
 }
-user -- register 
+user -- welcomepage
+register -up-> welcomepage:extend
 register --> login:include
 login --> homepage:include
 search -up-> homepage:extend
