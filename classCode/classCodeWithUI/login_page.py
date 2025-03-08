@@ -45,11 +45,11 @@ class Controller:
 
 
 class Account:
-   def __init__(self, email, password):
+   def __init__(self, email, password, userdetail):
       self.email = email
       self.password = password
       self.purchased_history = []
-      self.userdetail = None  # Holds details of user (points, promo codes, etc.)
+      self.userdetail = userdetail  # Holds details of user (points, promo codes, etc.)
 
    def login(self):
       print("Login Page")
@@ -98,38 +98,77 @@ class Account:
 
 
 class UserDetail:
-   def __init__(self, points, promocode):
-      self.points = points
-      self.promocode = promocode
+   def __init__(self, firstname, lastname, birthday, gender, identification, nationality, phone_number, address, point, promocode_list):
+      self.firstname = firstname
+      self.lastname = lastname
+      self.birthday = birthday
+      self.gender = gender
+      self.identification = identification
+      self.nationality = nationality
+      self.phone_number = phone_number
+      self.address = address
+      self.point = point
+      self.promocode_list = promocode_list
 
    def get_promocode(self):
-      return self.promocode
+      return self.promocode_list
+   
+   def edit_profile(self, firstname=None, lastname=None, phone_number=None, address=None):
+      if firstname:
+         self.firstname = firstname
+      if lastname:
+         self.lastname = lastname
+      if phone_number:
+         self.phone_number = phone_number
+      if address:
+         self.address = address    
+   
+   def get_user_detail(self):
+      return [
+         self.firstname,
+         self.lastname,
+         self.birthday,
+         self.gender,
+         self.identification,
+         self.nationality,
+         self.phone_number,
+         self.address,
+         self.point,
+         self.promocode_list
+      ] 
 
+class Promocode:
+   def __init__(self, code, point, discount_percent, expiration_date):
+      self.code = code
+      self.point_to_use = point
+      self.discount_percent = discount_percent
+      self.expiration_date = expiration_date
+
+   def is_valid(self):
+      return True
 # Example usage
 
-# Create a UserDetail object with points and a promo code
-user_detail = UserDetail(points=100, promocode="DISCOUNT10")
+# # Create a UserDetail object with points and a promo code
+# user_detail = UserDetail(points=100, promocode="DISCOUNT10")
 
-# Create an Account object with email, password, and UserDetail
-account = Account(email="user@example.com", password="password123")
+# # Create an Account object with email, password, and UserDetail
+# account = Account(email="user@example.com", password="password123")
 
-# Register the user
-account.register(email="user@example.com", password="password123", userdetail=user_detail)
+# # Register the user
+# account.register(email="user@example.com", password="password123", userdetail=user_detail)
 
-# Create a Controller object and manage the system
-controller = Controller()
-print(controller.turn_into_system(account))
+# # Create a Controller object and manage the system
+# controller = Controller()
+# print(controller.turn_into_system(account))
 
-# Check if user is logged in and display home page
-if controller.is_logged_in:
-   controller.display_home_page()
+# # Check if user is logged in and display home page
+# if controller.is_logged_in:
+#    controller.display_home_page()
 
-# Flight search
-controller.flight_search()
+# # Flight search
+# controller.flight_search()
 
-
-
-@rt('/login')
+@rt('/')
 def get():
    # Fullscreen Background with Pastel Gradient and Centering
    background = Style("""
@@ -149,23 +188,23 @@ def get():
          align-items: center; /* Vertically center */
       }
    """)
-
-   # Header with Circular Logo and Pastel Styling
+# Header with Circular Logo and Pastel Styling
    header = Div(
       Img(src="/Picture/fu4.jpg", style="height: 50px; width: 50px; border-radius: 50%; object-fit: cover; margin-right: 10px;"),
-      "Shit-Airline",
+      " Chern Air Line",
       style="padding: 15px; font-weight: bold; font-size: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; background-color: rgba(255, 255, 255, 0.7);"
    )
 
    # Login form with Acrylic (Glassmorphism) Effect and Pastel Details
    login_form = Form(
-      H2("Login", style="color: #6C4F82; margin-bottom: 20px; font-weight: bold;"),  # Pastel purple
+      
+      H2("Shit-airline", style="color: #6C4F82; margin-bottom: 20px; font-weight: bold;"),  # Pastel purple
 
       # Input fields with pastel and glassmorphism effect
       Input(id="username", placeholder="ชื่อผู้ใช้", required=True, 
-            style="width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 100px; background: rgba(255, 255, 255, 0.5); color: #6C4F82; backdrop-filter: blur(10px);"),
+            style="width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 50px; background: rgba(255, 255, 255, 0.5); color: #6C4F82; backdrop-filter: blur(10px);"),
       Input(id="password", type="password", placeholder="รหัสผ่าน", required=True, 
-            style="width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 8px; background: rgba(255, 255, 255, 0.5); color: #6C4F82; backdrop-filter: blur(10px);"),
+            style="width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 50px; background: rgba(255, 255, 255, 0.5); color: #6C4F82; backdrop-filter: blur(10px);"),
       
       # Login button with pastel yellow color
       Button("เข้าสู่ระบบ", 
@@ -192,8 +231,7 @@ def get():
       style="display: flex; flex-direction: column; align-items: center; width: 100%;"
    )
 
-
-
+   return Title("Login Page"), background, content
 
 @rt("/registration")
 def get():
@@ -235,9 +273,7 @@ def get():
             Label(CheckboxX(id="agree", label="I agree to the terms", required=True))
          ),
 
-         Button("Register", type="submit", style="background-color: #FFEB99; color: #333; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s ease; border: 2px solid #F9D01C;",
-            onmouseover="this.style.backgroundColor='#F9D01C'",
-            onmouseout="this.style.backgroundColor='#FFEB99'"),
+         Button("Register", type="submit", style="background-color: #FFD100; border: none; padding: 10px; border-radius: 5px;"),
          method="post",
          action="/register"
       )
@@ -247,12 +283,7 @@ def get():
 def post():
    return Container(
       H1("Registration Successful"),
-      P("Thank you for registering!"),
-      Button("Return to login page", type="submit", style="background-color: #FFEB99; color: #333; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s ease; border: 2px solid #F9D01C;",
-            onmouseover="this.style.backgroundColor='#F9D01C'",
-            onmouseout="this.style.backgroundColor='#FFEB99'"),
-         method="post",
-         action="/login"
+      P("Thank you for registering!")
    )
 
 @rt("/profile")
@@ -287,18 +318,6 @@ def post():
    return Container(
       H1("Profile Saved"),
       P("Your profile has been saved successfully!")
-   )
-
-@rt("/login")
-def post():
-   return Container(
-      H1("Registration Successful"),
-      P("Thank you for registering!"),
-      Button("Return to login page", type="submit", style="background-color: #FFEB99; color: #333; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s ease; border: 2px solid #F9D01C;",
-            onmouseover="this.style.backgroundColor='#F9D01C'",
-            onmouseout="this.style.backgroundColor='#FFEB99'"),
-         method="post",
-         action="/profile"
    )
 
 serve()
