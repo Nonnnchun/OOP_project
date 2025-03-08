@@ -74,6 +74,14 @@ class Booking:
     def price_cal(self):
         pass
 
+    def create_passenger_datails(self, passenger_num, passengerType, nametitle, name, surname, day_bday, month_bday, year_bday, primary, email, phone_number, seat):
+        if primary == 1:
+            passenger = PassengerDetail(passengerType, nametitle, name, surname, day_bday, month_bday, year_bday, email, phone_number, seat)
+            self.passenger_details.append(passenger)
+        else:
+            passenger = PassengerDetail(passengerType, nametitle, name, surname, day_bday, month_bday, year_bday, None, None, seat)
+            self.passenger_details.append(passenger)
+
 class Luggage:
     def __init__(self, kilogram, price_rate):
         self.kilogram = kilogram
@@ -214,11 +222,20 @@ class Promocode:
         return True
 
 class PassengerDetail:
-    def __init__(self, passengerType, passengerName, contact, birthday):
+    def __init__(self, passengerType, nametitle, name, surname, day_bday, month_bday, year_bday, email, phone_number, seat):
         self.passengerType = passengerType
-        self.passengerName = passengerName
-        self.contact = contact
-        self.birthday = birthday
+        self.nametitle = nametitle
+        self.name = name
+        self.surname = surname
+        self.day_bday = day_bday
+        self.month_bday = month_bday
+        self.year_bday = year_bday
+        self.email = email
+        self.phone_number = phone_number
+        self.phone_number = seat
+
+    def get_seat(self):
+        pass
 
 class PassengerType:
     def __init__(self, type, discount_percent):
