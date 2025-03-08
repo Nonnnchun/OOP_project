@@ -4,7 +4,7 @@ left to right direction
 actor "User" as user
 rectangle flight {
    usecase "Search" as search
-   usecase "Manage booking" as managebooking
+   usecase "Booking management" as managebooking
    usecase "Promocode" as promocode
    usecase "Payment" as payment
    usecase "Login" as login
