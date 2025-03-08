@@ -36,6 +36,10 @@ class Seat:
     def __init__(self, seat_id, seat_type):
         self.seat_id = seat_id
         self.seat_type = seat_type
+        self.seat_status = True
+
+    def update_seat_status(self):
+        self.seat_status = False
 
 class Airport:
     def __init__(self, name):
@@ -58,15 +62,16 @@ class FlightRoute:
         print("Display flight results")
 
 class Booking:
-    def __init__(self, booking_reference, payment, status, flight, passenger_details, promocode_discount, price, luggage):
+    def __init__(self, booking_reference, flight, promocode_discount, price, luggage, seat_list):
         self.booking_reference = booking_reference
-        self.payment = payment
-        self.status = status
+        self.status = False
         self.flight = flight
-        self.passenger_details = passenger_details
+        self.passenger_details = []
         self.promocode_discount = promocode_discount
         self.price = price
         self.luggage = luggage
+        self.pay_by = None
+        self.seat_list = seat_list
 
     def edit_booking(self):
         pass
@@ -74,13 +79,11 @@ class Booking:
     def price_cal(self):
         pass
 
-    def create_passenger_datails(self, passenger_num, passengerType, nametitle, name, surname, day_bday, month_bday, year_bday, primary, email, phone_number, seat):
-        if primary == 1:
-            passenger = PassengerDetail(passengerType, nametitle, name, surname, day_bday, month_bday, year_bday, email, phone_number, seat)
-            self.passenger_details.append(passenger)
-        else:
-            passenger = PassengerDetail(passengerType, nametitle, name, surname, day_bday, month_bday, year_bday, None, None, seat)
-            self.passenger_details.append(passenger)
+    def update_booking_status(self):
+        self.status = True
+
+    def create_pay_by(self, method_id):
+        self.pay_by = self.method_id
 
 class Luggage:
     def __init__(self, kilogram, price_rate):
@@ -88,32 +91,42 @@ class Luggage:
         self.price_rate = price_rate
 
 class Payment:
-    def __init__(self, ticket_price, amount):
-        self.ticket_price = ticket_price
-        self.amount = amount
+    def __init__(self, price, booking_reference):
+        self.price = price
+        self.booking_reference = booking_reference
 
-    def process_payment(self):
-        pass
+    def process_payment(self, payment_method, booking_reference):
+        return payment_method.pay(booking_reference)
 
 class PaymentMethod:
-    def __init__(self):
-        pass
+    def __init__(self, method_id):
+        self.method_id = method_id
+
+    def pay(self, booking, seat_list):
+        booking.create_pay_by(self.method_id)
+        booking.update_booking_status()
+        seat_list = booking.seat
+        for seat in seat_list:
+            seat.update_seat_status()
 
 class OnlineBanking(PaymentMethod):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, method_id="OnlineBanking"):
+        super().__init__(method_id)
 
 class Card(PaymentMethod):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, method_id, card_number, card_CVV, card_EXP):
+        super().__init__(method_id)
+        self.card_number = card_number
+        self.card_CVV = card_CVV
+        self.card_EXP = card_EXP
 
 class CreditCard(Card):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, method_id, card_number, card_CVV, card_EXP):
+        super().__init__("CreditCard", card_number, card_CVV, card_EXP)
 
 class DebitCard(Card):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, method_id, card_number, card_CVV, card_EXP):
+        super().__init__("DebitCard", card_number, card_CVV, card_EXP)
 
 class Account:
     def __init__(self, email, password):
@@ -222,8 +235,19 @@ class Promocode:
         return True
 
 class PassengerDetail:
-    def __init__(self, passengerType, nametitle, name, surname, day_bday, month_bday, year_bday, email, phone_number, seat):
+    def __init__(self, passengerType, seat):
         self.passengerType = passengerType
+        self.nametitle = None
+        self.name = None
+        self.surname = None
+        self.day_bday = None
+        self.month_bday = None
+        self.year_bday = None
+        self.email = None
+        self.phone_number = None
+        self.phone_number = seat
+
+    def update_passenger_details(self, nametitle, name, surname, day_bday, month_bday, year_bday, email, phone_number):
         self.nametitle = nametitle
         self.name = name
         self.surname = surname
@@ -232,10 +256,6 @@ class PassengerDetail:
         self.year_bday = year_bday
         self.email = email
         self.phone_number = phone_number
-        self.phone_number = seat
-
-    def get_seat(self):
-        pass
 
 class PassengerType:
     def __init__(self, type, discount_percent):
@@ -243,12 +263,20 @@ class PassengerType:
         self.discount_percent = discount_percent
 
 # Mockup Data
-seat1 = Seat("1A", "Economy")
-plane1 = Plane("P001", "Boeing 737", [seat1])
+def generate_seats(rows, seat_prefix):
+    return [Seat(f"{seat_prefix}{str(row).zfill(2)}", seat_prefix) for row in range(1, rows + 1)]
+
+seats_flight1_list = (
+    generate_seats(20, "EC") + 
+    generate_seats(5, "BS") +   
+    generate_seats(2, "FC")    
+)
+plane1 = Plane("P001", "Boeing 737", seats_flight1_list)
 flight1 = FlightRoute("JFK", "LAX", "10:00", "13:00")
+
 promocode1 = Promocode("DISCOUNT10", 10, "2025-12-31")
 promocode2 = Promocode("SALE20", 20, "2025-06-30")
 user_detail1 = UserDetail("John", "Doe", "1990-05-15", "Male", "123456789", "USA", "555-1234", "123 Main St", 100, [promocode1, promocode2])
-account1 = Account("password123", "john.doe@example.com", [], user_detail1)
+account1 = Account("password123", "john.doe@example.com")
 controller = Controller()
 controller.account_list.append(account1)
