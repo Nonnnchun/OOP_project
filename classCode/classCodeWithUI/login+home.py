@@ -51,6 +51,7 @@ class Controller:
 
 controller = Controller()
 
+
 # ================================
 #           ROUTES
 # ================================
@@ -76,16 +77,26 @@ def home():
             align-items: center; /* Vertically center */
         }
     """)
-    
-    go_to_login = Form(Button("เข้าสู่ระบบ", 
-            style="background-color: #FFEB99; color: #333; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s ease; border: 2px solid #F9D01C;",
+
+    go_to_login = Form(Button("Go to Login Page", 
+            style="""background-color: #FFEB99;
+            color: #333; width: 100%; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.3s ease; 
+            border: 2px solid #F9D01C;""",
+            
             onmouseover="this.style.backgroundColor='#F9D01C'",
             onmouseout="this.style.backgroundColor='#FFEB99'"),
         
-        action="/login", method="post",
-        style="background: rgba(255, 255, 255, 0.7); padding: 30px; border-radius: 12px; box-shadow: 0px 10px 24px rgba(60, 50, 50, 0.3); max-width: 400px; width: 100%; text-align: center; backdrop-filter: blur(20px); border: 1px solid rgba(60, 50, 50, 0.2);"
+        action="/login", 
+        method="get",
     )
-    
+
     return Title("Welcome to my Page"), background, go_to_login
 
 # Registration Page
@@ -113,11 +124,21 @@ def post(email: str, password: str, firstname: str, lastname: str):
 @rt("/login")
 def get():
     return Container(
-        H1("Login"),
+        H1("Login", style="text-align: center;"),
         Form(
-            Label("Email:", Input(name="email", type="email", required=True)),
-            Label("Password:", Input(name="password", type="password", required=True)),
-            Button("Login", type="submit"),
+            Label("Email:", Input(name="email", type="email", required=True), style="display: block;"),
+            Label("Password:", Input(name="password", type="password", required=True), style="display: block;"),
+            A("Don't have an account? Register here!",
+            style="""
+            display: block;
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+            color: #555; /* Light text color */
+            margin-bottom: 10px;
+            """ ,
+            href="/register"),
+            
+            Button("Login", type="submit", style="display: block; margin: 0 auto;"),
             method="post",
             action="/login"
         )
@@ -126,11 +147,32 @@ def get():
 @rt("/login")
 def post(email: str, password: str):
     message = controller.login(email, password)
-    return RedirectResponse('/home', status_code=303) if "successful" in message else message
+    return RedirectResponse('/home', status_code=303) if "success" in message else Container(
+        P(message), 
+        Form(Button("Return to Login Page", 
+            style="""background-color: #FFEB99;
+            color: #333; width: 100%; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.3s ease; 
+            border: 2px solid #F9D01C;""",
+            
+            onmouseover="this.style.backgroundColor='#F9D01C'",
+            onmouseout="this.style.backgroundColor='#FFEB99'"),
+        
+        formaction="/login")
+    )
 
 # Home Page (Only Accessible if Logged In)
 @rt("/home")
 def get():
+    user = controller.get_logged_in_user()
+    if not user:
+        return RedirectResponse('/login', status_code=303)
     user = controller.get_logged_in_user()
     if not user:
         return RedirectResponse('/login', status_code=303)
@@ -151,6 +193,11 @@ def get():
         )
     )
 
+@rt("/profile")
+def get():
+    user = controller.get_logged_in_user()
+    if not user:
+        return RedirectResponse('/login', status_code=303)
 # Profile Page
 @rt("/profile")
 def get():
@@ -172,5 +219,4 @@ def get():
     controller.logout()
     return RedirectResponse('/login', status_code=303)
 
-# Run FastHTML App
 serve()
