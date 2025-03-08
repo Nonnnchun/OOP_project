@@ -198,7 +198,7 @@ def get():
         ),
     )
 
-rt("/edit-profile", methods=["GET", "POST"])
+@rt("/edit-profile", methods=["GET", "POST"])
 def edit_profile(lastname: str = "", phone_number: str = "", address: str = ""):
     user = controller.get_logged_in_user()
     if not user:
@@ -289,7 +289,12 @@ def password_change(old_password: str = "", new_password: str = "", confirm_new_
     result = user.change_password(old_password, new_password, confirm_new_password)
 
     color = "green" if "successfully" in result else "red"
-    return Container(H3(result, style=f"color: {color}; text-align: center;"))
+    controller.logout()
+    return Container(H3(result, style=f"color: {color}; text-align: center;"),
+                    Form(Button("Go Back to login page", type="submit", style="font-size: 16px; background-color: #ccc; padding: 10px;",
+                    formaction="/logout")
+                     )
+    )
 
 # Logout
 @rt("/logout")
