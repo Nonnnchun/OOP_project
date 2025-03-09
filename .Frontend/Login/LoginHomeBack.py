@@ -8,67 +8,70 @@ from datetime import datetime, timedelta
 # ================================
 class UserDetail:
    def __init__(self, firstname, lastname, points=0):
-      # birthday, gender, identification, nationality, phone_number, address,
-      self.__firstname = firstname
-      self.__lastname = lastname
-      self.__points = points
-      self.__birthday = []
-      self.__gender = []
-      self.__identification = []
-      self.__nationality = []
-      self.__phone_number = []
-      self.__address = []
-      self.__promocode_list = []
+        # birthday, gender, identification, nationality, phone_number, address,
+        self.__firstname = firstname
+        self.__lastname = lastname
+        self.__points = points
+        self.__birthday = []
+        self.__gender = []
+        self.__identification = []
+        self.__nationality = []
+        self.__phone_number = []
+        self.__address = []
+        self.__promocode_list = []
    
    @property
    def firstname(self):
       return self.__firstname
-   
    @property
    def lastname(self):
       return self.__lastname
-   
    @property
    def points(self):
       return self.__points
-   
    @property
    def birthday(self):
       return self.__birthday
-   
    @property
    def gender(self):
       return self.__gender
-   
    @property
    def identification(self):
       return self.__identification
-   
    @property
    def nationality(self):
       return self.__nationality
-   
    @property
    def phone_number(self):
       return self.__phone_number
-   
    @property
    def address(self):
       return self.__address
-   
    @property
    def promocode_list(self):
       return self.__promocode_list
    
+   @lastname.setter
+   def lastname(self, new_lastname):
+      self.__lastname = new_lastname
+
+   @phone_number.setter
+   def phone_number(self, new_number):
+      self.__phone_number = new_number
+
+   @address.setter
+   def address(self, address):
+      self.__address = address
+        
    def edit_profile(self, firstname=None, lastname=None, phone_number=None, address=None):
-      if firstname:
-         self.__firstname = firstname
-      if lastname:
-         self.__lastname = lastname
-      if phone_number:
-         self.__phone_number = phone_number
-      if address:
-         self.__address = address
+        if firstname:
+            self.firstname = firstname
+        if lastname:
+            self.lastname = lastname
+        if phone_number:
+            self.phone_number = phone_number
+        if address:
+            self.address = address
 
 class Account:
    def __init__(self, email, password, userdetail):
@@ -79,11 +82,17 @@ class Account:
    @property
    def email(self):
       return self.__email
-
+   @property
+   def password(self):
+      return self.__password
    @property
    def userdetail(self):
       return self.__userdetail
    
+   @password.setter
+   def password(self, new_password):
+      self.__password = new_password
+      
    def check_password(self, password):
       return compare_digest(self.__password, password)
    
@@ -103,11 +112,25 @@ class Account:
 # Controller to manage users
 class Controller:
    def __init__(self):
-      self.accounts = []  # List of registered accounts
-      self.logged_in_user = None  # Store currently logged-in user
-      self.flights = []  # List of flights
+      self.__accounts = []  # List of registered accounts
+      self.__logged_in_user = None  # Store currently logged-in user
+      self.__flights = []  # List of flights
       self._next_flight_id = 1  # Track flight IDs
-
+   
+   @property
+   def accounts(self):
+      return self.__accounts
+   @property
+   def logged_in_user(self):
+      return self.__logged_in_user
+   @property
+   def flights(self):
+      return self.__flights
+   
+   @logged_in_user.setter
+   def logged_in_user(self, user):
+      self.__logged_in_user = user
+   
    def register(self, email, password, firstname, lastname):
       if any(acc._Account__email == email for acc in self.__accounts):
          return "Email already registered!"
@@ -169,13 +192,40 @@ class Controller:
 
 class FlightRoute:
    def __init__(self, id, origin, destination, date, price, available=True):
-      self.id = id
-      self.origin = origin
-      self.destination = destination
-      self.date = date
-      self.price = price
-      self.available = available
+      self.__id = id
+      self.__origin = origin
+      self.__destination = destination
+      self.__date = date
+      self.__price = price
+      self.__available = available
 
+   @property
+   def id(self):
+      return self.__id
+   @property
+   def origin(self):
+      return self.__origin
+   @property
+   def destination(self):
+      return self.__destination
+   @property
+   def date(self):
+      return self.__date
+   @property
+   def price(self):
+      return self.__price
+   @property
+   def available(self):
+      return self.__available
+   
+   @id.setter
+   def id(self, new_id):
+      self.__id = new_id
+      
+   @available.setter
+   def available(self, is_available):
+      self.__available = is_available
+   
 controller = Controller()
 locations = ["Bangkok", "Chiang Mai", "Phuket", "Hat Yai"]
 flights_to_add = []
@@ -198,4 +248,3 @@ tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 
 controller.add_flight(FlightRoute(100000, "Bangkok", "Chiang Mai", "2025-03-09", 6500, True))
 controller.add_flight(FlightRoute(1000001, "Chiang Mai", "Bangkok", tomorrow, 7000, True))
-
