@@ -4,6 +4,7 @@ class Controller:
         self.account_list = []
         self.flightRoute_list = []
         self.is_logged_in = False
+        self.booking_list = []
     
     def turn_into_system(self, user):
         if not user.has_account():
@@ -27,7 +28,6 @@ class Controller:
 
     def display_home_page(self):
         print("Displaying home page")
-
 
     def flight_search(self):
         pass
@@ -62,7 +62,8 @@ class FlightRoute:
         print("Display flight results")
 
 class Booking:
-    def __init__(self, booking_reference, flight, promocode_discount, price, luggage, seat_list):
+    def __init__(self, booking_reference, status, flight, promocode_discount, price, luggage, seat):
+
         self.booking_reference = booking_reference
         self.status = False
         self.flight = flight
@@ -71,7 +72,8 @@ class Booking:
         self.price = price
         self.luggage = luggage
         self.pay_by = None
-        self.seat_list = seat_list
+        self.seat = []
+
 
     def edit_booking(self):
         pass
@@ -102,7 +104,9 @@ class PaymentMethod:
     def __init__(self, method_id):
         self.method_id = method_id
 
-    def pay(self, booking, seat_list):
+    def pay(self, booking_reference):
+        booking = controller.booking_search(booking_reference)
+
         booking.create_pay_by(self.method_id)
         booking.update_booking_status()
         seat_list = booking.seat
@@ -256,7 +260,7 @@ class PassengerDetail:
         self.year_bday = year_bday
         self.email = email
         self.phone_number = phone_number
-
+        
 class PassengerType:
     def __init__(self, type, discount_percent):
         self.type = type
