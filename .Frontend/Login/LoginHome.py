@@ -1,8 +1,10 @@
 from fasthtml.common import *
 from LoginHomeBack import *
 
-app, rt = fast_app()
+controller = Controller()
 
+
+app, rt = fast_app()
 
 # ================================
 #           ROUTES
@@ -124,13 +126,13 @@ def post(email: str, password: str):
 def get():
     user = controller.get_logged_in_user()
     if not user:
-       return RedirectResponse('/login', status_code=303)
+        return RedirectResponse('/login', status_code=303)
 
     return Container(
         H1(f"Hello {user.userdetail.firstname} {user.userdetail.lastname}", 
-           style="text-align: center; color: #FFFFFF; margin: 20px 0;"),
+            style="text-align: center; color: #FFFFFF; margin: 20px 0;"),
         H6(f"Total points: {user.userdetail.points}", 
-           style="text-align: center; color: #FFFFFF; margin: 20px 0;"),
+            style="text-align: center; color: #FFFFFF; margin: 20px 0;"),
 
         # Grid for cards
         Div(
@@ -163,7 +165,7 @@ def get():
 
         # Logout button at bottom
         Form(Button("Logout", type="submit", 
-                    style="position: fixed; bottom: 20px; right: 20px;", formaction="/logout"))
+                style="position: fixed; bottom: 20px; right: 20px;", formaction="/logout"))
     )
 
 @rt("/profile")
@@ -268,18 +270,18 @@ def get():
 
             # Submit button
             Button("Submit", type="submit", style="font-size: 16px; background-color: #ffee63; padding: 10px;",
-                   formaction="/passwordCheck"),
+                formaction="/passwordCheck"),
             style="text-align: center; padding: 20px; display: flex; flex-direction: column; gap: 10px;"
         ),
 
         # Separate Go Back button (not inside the form to prevent validation issues)
         Form(
             Button("Go Back", type="submit", style="font-size: 16px; background-color: #ccc; padding: 10px;",
-                   formaction="/home"),
+                formaction="/home"),
             style="text-align: center; margin-top: -40px; padding: 20px;"  # Moves the button closer to the form
         )
     )
-     
+
 @rt("/passwordCheck", methods=["GET","POST"])
 def password_change(old_password: str = "", new_password: str = "", confirm_new_password: str = ""):
     user = controller.get_logged_in_user()  # Get the logged-in user
@@ -293,7 +295,7 @@ def password_change(old_password: str = "", new_password: str = "", confirm_new_
     return Container(H3(result, style=f"color: {color}; text-align: center;"),
                     Form(Button("Go Back to login page", type="submit", style="font-size: 16px; background-color: #ccc; padding: 10px;",
                     formaction="/logout")
-                     )
+                    )
     )
 
 # Logout

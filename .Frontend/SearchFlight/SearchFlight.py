@@ -4,6 +4,9 @@ from SearchFlightBack import *
 
 app, rt = fast_app()
 
+# ================================
+#           ROUTES
+# ================================
 
 @rt('/')
 def home():
