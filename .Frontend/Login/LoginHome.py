@@ -425,6 +425,16 @@ async def search_results(request):  # ✅ Make function async to handle form ext
         and flight.date.strip() == date
     ]
 
+    # Print all flights in the controller to check if the desired one exists
+    print("All flights in controller:")
+    for flight in controller.flights:
+        print(f"ID: {flight.id}, From: {flight.origin}, To: {flight.destination}, Date: {flight.date}, Price: {flight.price}, Available: {flight.available}")
+
+    # Print matching flights found
+    print("Matching flights found:")
+    for flight in matching_flights:
+        print(f"ID: {flight.id}, From: {flight.origin}, To: {flight.destination}, Date: {flight.date}, Price: {flight.price}, Available: {flight.available}")
+    print(f"Received Origin: '{origin}', Destination: '{destination}', Date: '{date}'")
     styles = Style("""
         body {
             font-family: Arial, sans-serif;
