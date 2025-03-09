@@ -94,7 +94,7 @@ class Account:
       self.__password = new_password
       
    def check_password(self, password):
-      return compare_digest(self.__password, password)
+      return compare_digest(self.password, password)
    
    def change_password(self, old_password, new_password, confirm_new_password):
     if old_password != self.password:
@@ -132,24 +132,24 @@ class Controller:
       self.__logged_in_user = user
    
    def register(self, email, password, firstname, lastname):
-      if any(acc._Account__email == email for acc in self.__accounts):
+      if any(acc.email == email for acc in self.accounts):
          return "Email already registered!"
       
       user_detail = UserDetail(firstname, lastname)
       new_account = Account(email, password, user_detail)
-      self.__accounts.append(new_account)
+      self.accounts.append(new_account)
       return "Registration successful!"
 
    def login(self, email, password):
-      for acc in self.__accounts:
-         if acc._Account__email == email and acc.check_password(password):
-               self.__logged_in_user = acc
+      for acc in self.accounts:
+         if acc.email == email and acc.check_password(password):
+               self.logged_in_user = acc
                return "Login successful!"
       return "Invalid email or password!"
 
    def get_logged_in_user(self):
-      return self.__logged_in_user
-   
+      return self.logged_in_user
+
    def logout(self):
       self.logged_in_user = None
       
