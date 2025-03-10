@@ -4,74 +4,170 @@ from random import randint, choice
 from datetime import datetime, timedelta
 
 # ================================
+#   LUGGAGE MANAGEMENT CLASSES
+# ================================
+class Luggage:
+   def __init__(self, kilogram, price_rate=None):
+      self.kilogram = kilogram
+      self.price_rate = price_rate or self.get_default_price_rate()
+      
+   def get_default_price_rate(self):
+      return {
+         "0-15": 0,      # 0-15 kg free
+         "15-20": 10,    # 15-20 kg costs 10 THB per kg
+         "20-30": 15,    # 20-30 kg costs 15 THB per kg
+         "30+": 20       # 30+ kg costs 20 THB per kg
+      }
+   
+   def calculate_price(self):
+      price = 0
+      
+      if self.kilogram <= 15:
+         return price
+      elif self.kilogram <= 20:
+         price += (self.kilogram - 15) * self.price_rate["15-20"]
+      elif self.kilogram <= 30:
+         price += 5 * self.price_rate["15-20"]  # Price for 15-20 kg
+         price += (self.kilogram - 20) * self.price_rate["20-30"]
+      else:
+         price += 5 * self.price_rate["15-20"]  # Price for 15-20 kg
+         price += 10 * self.price_rate["20-30"]  # Price for 20-30 kg
+         price += (self.kilogram - 30) * self.price_rate["30+"]
+         
+      return price
+
+class LuggagePricingSystem:
+   def __init__(self):
+      pass
+   
+   def calculate_luggage_price(self, luggage):
+      return luggage.calculate_price()
+   
+
+# ================================
 #   ACCOUNT MANAGEMENT CLASSES
 # ================================
 class UserDetail:
    def __init__(self, firstname, lastname, points=0):
-        # birthday, gender, identification, nationality, phone_number, address,
-        self.__firstname = firstname
-        self.__lastname = lastname
-        self.__points = points
-        self.__birthday = []
-        self.__gender = []
-        self.__identification = []
-        self.__nationality = []
-        self.__phone_number = []
-        self.__address = []
-        self.__promocode_list = []
+      self.__firstname = firstname
+      self.__lastname = lastname
+      self.__points = points
+      self.__birthday = []
+      self.__gender = []
+      self.__identification = []
+      self.__nationality = []
+      self.__phone_number = []
+      self.__address = []
+      self.__promocode_list = []
    
    @property
-   def firstname(self):
-      return self.__firstname
+   def firstname(self): return self.__firstname
    @property
-   def lastname(self):
-      return self.__lastname
+   def lastname(self): return self.__lastname
    @property
-   def points(self):
-      return self.__points
+   def points(self): return self.__points
    @property
-   def birthday(self):
-      return self.__birthday
+   def birthday(self): return self.__birthday
    @property
-   def gender(self):
-      return self.__gender
+   def gender(self): return self.__gender
    @property
-   def identification(self):
-      return self.__identification
+   def identification(self): return self.__identification
    @property
-   def nationality(self):
-      return self.__nationality
+   def nationality(self): return self.__nationality
    @property
-   def phone_number(self):
-      return self.__phone_number
+   def phone_number(self): return self.__phone_number
    @property
-   def address(self):
-      return self.__address
+   def address(self): return self.__address
    @property
-   def promocode_list(self):
-      return self.__promocode_list
+   def promocode_list(self): return self.__promocode_list
    
    @lastname.setter
-   def lastname(self, new_lastname):
-      self.__lastname = new_lastname
-
+   def lastname(self, new_lastname): self.__lastname = new_lastname
    @phone_number.setter
-   def phone_number(self, new_number):
-      self.__phone_number = new_number
-
+   def phone_number(self, new_number): self.__phone_number = new_number
    @address.setter
-   def address(self, address):
-      self.__address = address
-        
-   def edit_profile(self, firstname=None, lastname=None, phone_number=None, address=None):
-        if firstname:
-            self.firstname = firstname
-        if lastname:
-            self.lastname = lastname
-        if phone_number:
-            self.phone_number = phone_number
-        if address:
-            self.address = address
+   def address(self, address): self.__address = address
+   @firstname.setter
+   def firstname(self, firstname): self.__firstname = firstname
+   @birthday.setter
+   def birthday(self, birthday): self.__birthday = birthday
+   @gender.setter
+   def gender(self, gender): self.__gender = gender
+   @nationality.setter
+   def nationality(self, nation): self.__nationality = nation
+      
+   def edit_profile(self, firstname=None, lastname=None, phone_number=None, address=None, birthday=None, gender=None, nationality=None):
+      if firstname: self.firstname = firstname
+      if lastname: self.lastname = lastname
+      if phone_number: self.phone_number = phone_number
+      if address: self.address = address
+      if birthday: self.birthday = birthday
+      if gender: self.gender = gender
+      if nationality: self.nationality = nationality
+            
+class Seat:
+      def __init__(self, seat_id, seat_type, price=0):
+         self.seat_id = seat_id
+         self.seat_type = seat_type  # e.g., "Economy", "Business", "First Class"
+         self.seat_status = True  # True means available, False means booked
+         self.price = price
+      
+      def update_seat_status(self):
+         self.seat_status = False
+      
+      def is_available(self):
+         return self.seat_status
+      
+      def __str__(self):
+         status = "Available" if self.seat_status else "Booked"
+         return f"Seat {self.seat_id} ({self.seat_type}): {status} - ${self.price}"
+
+class Plane:
+   def __init__(self, plane_id, aircraft):
+      self.plane_id = plane_id
+      self.aircraft = aircraft
+      self.seats = self._generate_seats()
+   
+   def _generate_seats(self):
+      seats = []
+      if self.aircraft == "Boeing 777":
+         # First Class (rows 1-2, 2 seats per row)
+         for row in range(1, 3):
+               for col in ["A", "B"]:
+                  seats.append(Seat(f"{row}{col}", "First Class", 500))
+         # Business Class (rows 3-7, 4 seats per row)
+         for row in range(3, 8):
+               for col in ["A", "B", "C", "D"]:
+                  seats.append(Seat(f"{row}{col}", "Business", 200))
+         # Economy Class (rows 8-27, 6 seats per row)
+         for row in range(8, 28):
+               for col in ["A", "B", "C", "D", "E", "F"]:
+                  seats.append(Seat(f"{row}{col}", "Economy", 50))
+      
+      elif self.aircraft == "Boeing 737":
+         # Business Class (rows 1-3, 4 seats per row)
+         for row in range(1, 4):
+               for col in ["A", "B", "C", "D"]:
+                  seats.append(Seat(f"{row}{col}", "Business", 180))
+         # Economy Class (rows 4-18, 6 seats per row)
+         for row in range(4, 19):
+               for col in ["A", "B", "C", "D", "E", "F"]:
+                  seats.append(Seat(f"{row}{col}", "Economy", 40))
+      
+      return seats
+   
+   def get_available_seats(self, seat_type=None):
+      if seat_type:
+         return [seat for seat in self.seats if seat.seat_type == seat_type and seat.is_available()]
+      return [seat for seat in self.seats if seat.is_available()]
+
+class Airport:
+   def __init__(self, name, code):
+      self.name = name
+      self.code = code
+   
+   def __str__(self):
+      return f"{self.name} ({self.code})"
 
 class Account:
    def __init__(self, email, password, userdetail):
@@ -80,56 +176,89 @@ class Account:
       self.__userdetail = userdetail
 
    @property
-   def email(self):
-      return self.__email
+   def email(self): return self.__email
    @property
-   def password(self):
-      return self.__password
+   def password(self): return self.__password
    @property
-   def userdetail(self):
-      return self.__userdetail
+   def userdetail(self): return self.__userdetail
    
    @password.setter
-   def password(self, new_password):
-      self.__password = new_password
+   def password(self, new_password): self.__password = new_password
       
    def check_password(self, password):
       return compare_digest(self.password, password)
    
    def change_password(self, old_password, new_password, confirm_new_password):
-    if old_password != self.password:
-        return "Old password is incorrect"
-    if new_password != confirm_new_password:
-        return "New passwords do not match"
-    if len(new_password) < 6:  # Ensure new password is strong
-        return "New password must be at least 6 characters long"
-    if new_password == old_password:  # Ensure new password is different from the old one
-        return "New password cannot be the same as the old password"
+      if old_password != self.password:
+         return "Old password is incorrect"
+      if new_password != confirm_new_password:
+         return "New passwords do not match"
+      if len(new_password) < 6:
+         return "New password must be at least 6 characters long"
+      if new_password == old_password:
+         return "New password cannot be the same as the old password"
 
-    self.password = new_password
-    return "Password changed successfully"
+      self.password = new_password
+      return "Password changed successfully"
 
-# Controller to manage users
+class FlightRoute:
+   def __init__(self, flight_id, origin_airport, destination_airport, departure_time, arrive_time, plane):
+      self.flight_id = flight_id
+      self.origin = origin_airport.code
+      self.destination = destination_airport.code
+      self.departure_time = departure_time
+      self.arrive_time = arrive_time
+      self.plane = plane
+   
+   def display_flight_info(self):
+      print(f"Flight {self.flight_id}: {self.origin} -> {self.destination}")
+      print(f"Departure: {self.departure_time}")
+      print(f"Arrival: {self.arrive_time}")
+      print(f"Aircraft: {self.plane.aircraft} (ID: {self.plane.plane_id})")
+
+class Booking:
+   def __init__(self, flight, booking_reference):
+      self.flight = flight
+      self.booking_reference = booking_reference
+      self.seat = None
+      self.luggage = None
+
+   def add_luggage(self, kilogram):
+      self.luggage = Luggage(kilogram)
+      return self.luggage
+   
+   def calculate_total_price(self):
+      total = 0
+      if self.seat:
+         total += self.seat.price
+      
+      if self.luggage:
+         luggage_system = LuggagePricingSystem()
+         luggage_price = luggage_system.calculate_luggage_price(self.luggage)
+         total += luggage_price
+      
+      return total
+
+# Controller to manage users, flights, and luggage
 class Controller:
    def __init__(self):
-      self.__accounts = []  # List of registered accounts
-      self.__logged_in_user = None  # Store currently logged-in user
-      self.__flights = []  # List of flights
-      self._next_flight_id = 1  # Track flight IDs
+      self.planes = []
+      self.__accounts = []
+      self.__logged_in_user = None
+      self.__flights = []
+      self.bookings = []
+      self._next_flight_id = 1
+      self.luggage_system = LuggagePricingSystem()
    
    @property
-   def accounts(self):
-      return self.__accounts
+   def accounts(self): return self.__accounts
    @property
-   def logged_in_user(self):
-      return self.__logged_in_user
+   def logged_in_user(self): return self.__logged_in_user
    @property
-   def flights(self):
-      return self.__flights
+   def flights(self): return self.__flights
    
    @logged_in_user.setter
-   def logged_in_user(self, user):
-      self.__logged_in_user = user
+   def logged_in_user(self, user): self.__logged_in_user = user
    
    def register(self, email, password, firstname, lastname):
       if any(acc.email == email for acc in self.accounts):
@@ -143,20 +272,41 @@ class Controller:
    def login(self, email, password):
       for acc in self.accounts:
          if acc.email == email and acc.check_password(password):
-               self.logged_in_user = acc
-               return "Login successful!"
+            self.logged_in_user = acc
+            return "Login successful!"
       return "Invalid email or password!"
 
    def get_logged_in_user(self):
       return self.logged_in_user
+   
+   def get_flight_by_id(self, flight_id):
+      for flight in self.flights:
+         if flight.flight_id == flight_id:
+            return flight
+      print(f"Flight {flight_id} not found")
+      return None
+   
+   def create_booking(self, flight_id, luggage_kg=0):
+      flight = self.get_flight_by_id(flight_id)
+      if not flight:
+         print(f"Error: Flight {flight_id} not found")
+         return None
+      
+      booking_reference = f"BK{randint(1000, 9999)}"
+      new_booking = Booking(flight, booking_reference)
+      
+      if luggage_kg > 0:
+         new_booking.add_luggage(luggage_kg)
+         
+      self.bookings.append(new_booking)
+      print(f"Booking Created: {booking_reference} for Flight {flight_id}")
+      return new_booking
 
    def logout(self):
       self.logged_in_user = None
       
    def search_flights(self, origin, destination, date):
-      # This method will search for flights based on the origin, destination, and date
-      # For simplicity, let's assume we have a list of flights stored in self.flights
-      results = [flight for flight in self.flights if flight.origin == origin and flight.destination == destination and flight.date == date]
+      results = [flight for flight in self.flights if flight.origin == origin and flight.destination == destination and flight.departure_time.startswith(date)]
       return results
 
    def add_flight(self, flight):
@@ -171,8 +321,8 @@ class Controller:
    def update_flight(self, updated_flight):
       for i, flight in enumerate(self.flights):
          if flight.id == updated_flight.id:
-               self.flights[i] = updated_flight
-               return updated_flight
+            self.flights[i] = updated_flight
+            return updated_flight
       return None
 
    def delete_flight(self, flight_id):
@@ -187,64 +337,62 @@ class Controller:
                      query in flight.destination.lower()]
       if available_only:
          filtered = [flight for flight in filtered if flight.available]
-
-      return filtered
-
-class FlightRoute:
-   def __init__(self, id, origin, destination, date, price, available=True):
-      self.__id = id
-      self.__origin = origin
-      self.__destination = destination
-      self.__date = date
-      self.__price = price
-      self.__available = available
-
-   @property
-   def id(self):
-      return self.__id
-   @property
-   def origin(self):
-      return self.__origin
-   @property
-   def destination(self):
-      return self.__destination
-   @property
-   def date(self):
-      return self.__date
-   @property
-   def price(self):
-      return self.__price
-   @property
-   def available(self):
-      return self.__available
-   
-   @id.setter
-   def id(self, new_id):
-      self.__id = new_id
       
-   @available.setter
-   def available(self, is_available):
-      self.__available = is_available
+      return filtered
    
+   def add_plane(self, plane):
+      self.planes.append(plane)
+      
+   def generate_flight_id(self):
+      return f"FL{randint(100, 999)}"
+
+   def generate_random_flight_list(self, airports, num_flights=10):
+      for _ in range(num_flights):
+            origin = choice(airports)
+            destination = choice([ap for ap in airports if ap != origin])
+            
+            departure_date = datetime(2025, 3, 1) + timedelta(days=randint(1, 30))
+            departure_time = departure_date.strftime("%Y-%m-%d %H:%M")
+            
+            flight_duration = randint(1, 5)
+            arrive_time = (departure_date + timedelta(hours=flight_duration)).strftime("%Y-%m-%d %H:%M")
+            
+            plane = choice(self.planes)
+            
+            flight = FlightRoute(self.generate_flight_id(), origin, destination, departure_time, arrive_time, plane)
+            self.flights.append(flight)
+
+   def display_all_flights(self):
+      for flight in self.flights:
+         flight.display_flight_info()
+         print()
+            
+   def calculate_luggage_price(self, luggage):
+      return self.luggage_system.calculate_luggage_price(luggage)
+
+# Initialize the system
 controller = Controller()
-locations = ["Bangkok", "Chiang Mai", "Phuket", "Hat Yai"]
-flights_to_add = []
 
-for i in range(1, 10000):  
-   origin = choice(locations)
-   destination = choice([loc for loc in locations if loc != origin])  # Ensure destination is different
-   random_days = randint(1, 30)  # Pick a random date within the next 300 days
-   flight_date = (datetime(2025, 3, 1) + timedelta(days=random_days)).strftime("%Y-%m-%d")
-   price = randint(3000, 15000)  # Random price between 3,000 and 15,000 THB
-   available = choice([True])  # Random availability
+# Setup airports
+jfk = Airport("John F. Kennedy International Airport", "JFK")
+lax = Airport("Los Angeles International Airport", "LAX")
+sfo = Airport("San Francisco International Airport", "SFO")
+bkk = Airport("Suvarnabhumi Airport", "BKK")
+cnx = Airport("Chiang Mai International Airport", "CNX")
 
-   flights_to_add.append(FlightRoute(i, origin, destination, flight_date, price, available))
+airport_list = [jfk, lax, sfo, bkk, cnx]
 
-# Add flights to the controller
-for flight in flights_to_add:
-   controller.add_flight(flight)
+# Create & Add Planes
+boeing_777 = Plane("B777-001", "Boeing 777")
+boeing_737 = Plane("B737-002", "Boeing 737")
 
-tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
+controller.add_plane(boeing_777)
+controller.add_plane(boeing_737)
 
-controller.add_flight(FlightRoute(100000, "Bangkok", "Chiang Mai", "2025-03-09", 6500, True))
-controller.add_flight(FlightRoute(1000001, "Chiang Mai", "Bangkok", tomorrow, 7000, True))
+# Generate Flights
+controller.generate_random_flight_list(airport_list, num_flights=10)
+
+# Display Flights
+controller.display_all_flights()
+
+luggage_system = LuggagePricingSystem()

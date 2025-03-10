@@ -29,8 +29,6 @@ class Controller:
     def display_home_page(self):
         print("Displaying home page")
 
-    def flight_search(self):
-        pass
 
 class Seat:
     def __init__(self, seat_id, seat_type):
