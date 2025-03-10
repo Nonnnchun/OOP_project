@@ -580,7 +580,7 @@ def home():
         )
     )
 
-    return Title("Welcome to Shit Airlines"), styles, header, main_content
+    return Title("Shit Airlines 🌟🛩️"), styles, header, main_content
 
 # Registration Page
 @rt("/register")
