@@ -624,11 +624,12 @@ class DebitCard(ATMCard):
 class Booking:
     bookings = []  # Class variable to store all bookings
     
-    def __init__(self, flight, booking_reference=None):
+    def __init__(self, flight, user_email, booking_reference=None):
         # Generate booking reference if not provided
         self.__booking_reference = booking_reference or f"BK{randint(1000, 9999)}"
         self.__flight = flight
         self.__outbound_seat = None
+        self.__user_email = user_email
         self.__return_seat = None
         self.__passengers = []
         self.__passenger_seats = {}
@@ -652,7 +653,8 @@ class Booking:
         
         # Add to class bookings list
         Booking.bookings.append(self)
-        
+    @property
+    def user_email(self): return self.__user_email
     @property
     def booking_reference(self): return self.__booking_reference
     @property
@@ -959,19 +961,23 @@ class Controller:
         return None
    
     def create_booking(self, flight_id, luggage_kg=0):
+        if not self.logged_in_user:
+            print("❌ Error: No user logged in!")
+            return None
+
         flight = self.get_flight_by_id(flight_id)
         if not flight:
-            print(f"Error: Flight {flight_id} not found")
+            print(f"❌ Error: Flight {flight_id} not found")
             return None
-        
+
         booking_reference = f"BK{randint(1000, 9999)}"
-        new_booking = Booking(flight, booking_reference)
-        
+        new_booking = Booking(flight, self.logged_in_user.email, booking_reference)  # 🔥 Store user email
+
         if luggage_kg > 0:
             new_booking.add_luggage(luggage_kg)
-            
+
         self.bookings.append(new_booking)
-        print(f"Booking Created: {booking_reference} for Flight {flight_id}")
+        print(f"✅ Booking Created: {booking_reference} for Flight {flight_id} by {self.logged_in_user.email}")
         return new_booking
 
     def add_booking_history(self, booking):

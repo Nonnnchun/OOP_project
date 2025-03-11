@@ -296,15 +296,22 @@ async def edit_booking_page(ref: str, flight_date: str = "", confirm: bool = Fal
     )
 
 def get_booking_table():
-    """Generate the bookings table"""
-    if not Booking.bookings:
+    """Generate the bookings table, but only for the logged-in user."""
+    if not controller.logged_in_user:
+        return Div(
+            H3("You must be logged in to view bookings.", style="color: red; text-align: center;")
+        )
+
+    # 🔥 Filter bookings to only show those belonging to the logged-in user
+    user_bookings = [b for b in Booking.bookings if b.user_email == controller.logged_in_user.email]
+
+    if not user_bookings:
         return Div(
             H3("No bookings available", style="color: #ff6347; text-align: center;")
         )
-    
+
     booking_rows = []
-    for booking in Booking.bookings:
-        # Get seat info for all passengers
+    for booking in user_bookings:  # ✅ Only show the current user's bookings
         seat_info = []
         if hasattr(booking, 'passenger_seats'):
             for passenger_id, seat_id in booking.passenger_seats.items():
@@ -312,38 +319,32 @@ def get_booking_table():
                 if passenger:
                     seat_info.append(Div(f"{passenger.firstname}: {seat_id}"))
         seat_info_container = Div(*seat_info) if seat_info else "Not assigned"
-        
-        # Get flight info
+
         flight_info = f"{booking.flight.origin} → {booking.flight.destination}"
-        
-        # Get all passengers info
+
         passenger_info = []
         if hasattr(booking, 'passengers'):
             for passenger in booking.passengers:
                 passenger_info.append(Div(f"{passenger.firstname} {passenger.lastname}"))
         passenger_info_container = Div(*passenger_info) if passenger_info else "No passengers"
-        
-        # Get price info
+
         total_price = 0
         if hasattr(booking, 'passenger_seats'):
             for seat_id in booking.passenger_seats.values():
                 seat = next((s for s in booking.flight.plane.seats if s.seat_id == seat_id), None)
                 if seat:
                     total_price += seat.price
-        
+
         if hasattr(booking, 'luggage_weight') and booking.luggage_weight > 0:
             luggage = Luggage(booking.luggage_weight)
             total_price += luggage.calculate_price()
-        
-        # Get luggage info
+
         luggage_info = f"{booking.luggage_weight} kg" if hasattr(booking, 'luggage_weight') and booking.luggage_weight > 0 else "No luggage"
-        
-        # Get payment method info
+
         payment_info = "Not paid"
         if booking.payment and booking.payment.method:
             payment_info = f"{booking.payment.method.method_id} ({booking.payment.method.card_number[-4:]})"
-        
-        # Create action buttons
+
         action_buttons = []
         if booking.status != "Cancelled":
             action_buttons.extend([
@@ -359,7 +360,7 @@ def get_booking_table():
                        hx_swap="outerHTML",
                        style="background-color: #ff6347; color: white; border: none; padding: 5px 10px; border-radius: 4px;")
             ])
-        
+
         booking_rows.append(
             Tr(
                 Td(booking.booking_reference),
