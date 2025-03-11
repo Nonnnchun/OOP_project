@@ -8,9 +8,9 @@ participant Booking
 participant Passenger
 participant Seat
 participant Payment
-participant OnlineBanking
 participant DebitCard
 participant CreditCard
+participant ATMCard
 
 == Enter Passenger Info ==
 
@@ -47,21 +47,25 @@ deactivate Booking
 Controller -> Payment: process_payment()
 activate Payment 
 
-alt Pay with OnlineBanking
-    Payment -> OnlineBanking: pay()
-    activate OnlineBanking 
-    OnlineBanking --> Payment: return payment_success
-    deactivate OnlineBanking 
-
-else Pay with DebitCard
+alt Pay with DebitCard
     Payment -> DebitCard: pay()
     activate DebitCard
+    DebitCard -> ATMCard: validate_card()
+    activate ATMCard
+    ATMCard --> DebitCard: return card_valid
+    deactivate ATMCard
+    DebitCard -> DebitCard: calculate_fee()
     DebitCard --> Payment: return payment_success
     deactivate DebitCard 
 
 else Pay with CreditCard
     Payment -> CreditCard: pay()
-    activate CreditCard 
+    activate CreditCard
+    CreditCard -> ATMCard: validate_card()
+    activate ATMCard
+    ATMCard --> CreditCard: return card_valid
+    deactivate ATMCard
+    CreditCard -> CreditCard: calculate_interest()
     CreditCard --> Payment: return payment_success
     deactivate CreditCard 
 end

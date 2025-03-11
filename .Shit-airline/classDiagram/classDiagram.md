@@ -102,6 +102,21 @@ classDiagram
         +calculate_luggage_price(luggage)
     }
 
+    %% StandardPricing Class
+    %%class StandardPricing {
+    %%    -base_rate
+    %%    +calculate_luggage_price(luggage)
+    %%}
+
+    %% SeasonalPricing Class
+    %%class SeasonalPricing {
+    %%    -season_multiplier
+    %%    +calculate_luggage_price(luggage)
+    %%}
+
+
+
+
     %% Payment Class
     class Payment {
         -price
@@ -221,3 +236,4 @@ classDiagram
     ATMCard <|-- DebitCard: extends
     
     LuggagePricingSystem "1" --> "*" Luggage: calculates price
+
