@@ -1,0 +1,165 @@
+@startuml Homepage
+
+actor "User" as user
+participant UI
+participant Controller
+participant Account
+participant UserDetail
+participant Promocode
+
+== View Home == 
+
+user -> UI: view_home_page()
+activate UI
+UI -> Controller: get_logged_in_user()
+activate Controller
+Controller -> Account: get_user_details()
+activate Account
+Account --> Controller: return user_details
+deactivate Account
+Controller --> UI: return home_page_data
+deactivate Controller
+UI --> user: display_home_page()
+deactivate UI
+
+== View Booking History ==
+
+user -> UI: view_booking_history()
+activate UI
+UI -> Controller: get_logged_in_user()
+activate Controller
+Controller -> Account: get booking_history
+activate Account
+
+
+Account --> Controller: return booking_history
+
+
+deactivate Account
+Controller --> UI: return booking_history
+deactivate Controller
+UI --> user: display_booking_history()
+deactivate UI
+
+== View Promocodes ==
+
+user -> UI: view_promocodes()
+activate UI
+UI -> Controller: get_logged_in_user()
+activate Controller
+Controller -> Account: get_promocode()
+activate Account
+Account -> Promocode: get_available_promocode()
+activate Promocode
+Promocode --> Account: return promocode
+deactivate Promocode
+Account --> Controller: return promocode_list
+deactivate Account
+Controller --> UI: return promocode_list
+deactivate Controller
+UI --> user: display_promocodes()
+deactivate UI
+
+== Use Points ==
+
+user -> UI: redeem_points()
+activate UI
+UI -> Controller: get_logged_in_user()
+activate Controller
+Controller -> Account: use_points()
+activate Account
+
+opt Points sufficient
+    Account -> Promocode: apply_point()
+    activate Promocode
+    Promocode --> Account: return updated_promocode
+    deactivate Promocode
+    Account --> Controller: return updated_points
+else Points insufficient
+    Account --> Controller: return "insufficient points"
+end
+
+deactivate Account
+Controller --> UI: return points_status
+deactivate Controller
+UI --> user: display_updated_points()
+deactivate UI
+
+== Edit Profile ==
+
+user -> UI: view_profile()
+activate UI
+UI -> Controller: get_logged_in_user()
+activate Controller
+Controller -> Account: get_user_detail()
+activate Account
+Account -> UserDetail: get_user_details()
+activate UserDetail
+UserDetail --> Account: return details
+deactivate UserDetail
+Account --> Controller: return user_details
+deactivate Account
+Controller --> UI: return profile_data
+deactivate Controller
+UI --> user: display_profile_info()
+deactivate UI
+
+user -> UI: submit_profile_form()
+activate UI
+UI -> Controller: get_logged_in_user()
+activate Controller
+Controller -> Account: edit_profile()
+activate Account
+Account -> UserDetail: edit_profile()
+activate UserDetail
+UserDetail --> Account: update_successful
+deactivate UserDetail
+Account --> Controller: return success
+deactivate Account
+Controller --> UI: return update_status
+deactivate Controller
+UI --> user: display_profile_updated()
+deactivate UI
+
+== Change Password ==
+
+user -> UI: submit_password_form()
+activate UI
+UI -> Controller: get_logged_in_user()
+activate Controller
+Controller -> Account: change_password()
+activate Account
+
+opt Old password correct
+    opt Format valid
+        Account --> Controller: return success
+    else Format invalid
+        Account --> Controller: return "invalid format"
+    end
+else Old password incorrect
+        Account --> Controller: return "incorrect password"
+    
+end
+
+deactivate Account
+Controller --> UI: return password_status
+deactivate Controller
+UI --> user: display_password_updated()
+deactivate UI
+
+== Logout ==
+
+user -> UI: click_logout()
+activate UI
+UI -> Controller: get_logged_in_user()
+activate Controller
+Controller -> Account: logout()
+activate Account
+Account --> Controller: return success
+deactivate Account
+Controller --> UI: return logout_status
+deactivate Controller
+UI --> user: display_logged_out()
+deactivate UI
+
+@enduml

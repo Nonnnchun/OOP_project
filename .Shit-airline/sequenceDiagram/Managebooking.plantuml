@@ -1,0 +1,53 @@
+@startuml ManageBooking
+actor "User" as user
+participant UI
+participant Controller
+participant Booking
+participant FlightRoute
+participant Seat
+participant Payment
+
+== Manage Booking ==
+
+user -> UI: select_booking_option()
+activate UI
+UI -> Controller: select_booking_action()
+activate Controller
+alt Edit Booking
+    Controller -> Booking: edit()
+    activate Booking 
+    Booking -> FlightRoute: get_available_flights()
+    activate FlightRoute 
+    FlightRoute --> Booking: return available_flights[]
+    deactivate FlightRoute
+    Booking -> Seat: get_available_seats()
+    activate Seat 
+    Seat --> Booking: return available_seats[]
+    deactivate Seat
+    Booking -> Seat: refund_seat()
+    activate Seat 
+    Seat--> Booking: return refund_success
+    deactivate Seat
+    Booking --> Controller: return flight_updated
+    deactivate Booking
+
+else Cancel Booking
+    Controller -> Booking: cancel()
+    activate Booking 
+    Booking -> Payment: refund()
+    activate Payment 
+    Payment --> Booking: return refund_processed
+    deactivate Payment
+    Booking -> Seat: refund_seat()
+    activate Seat 
+    Seat--> Booking: return refund_success
+    deactivate Seat
+    Booking --> Controller: return booking_cancelled
+    deactivate Booking
+end
+
+Controller --> UI: return booking_status
+deactivate Controller
+UI --> user: display_booking_confirmation()
+deactivate UI
+@enduml
