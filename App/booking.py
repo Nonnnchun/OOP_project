@@ -62,10 +62,8 @@ async def booking_summary(request):
 
         if seat_id != 'Not assigned':
             seat = next((s for s in flight.outbound_seats if s.seat_id == seat_id), None)
-
             if not seat:
                 seat = next((s for s in flight.plane.seats if s.seat_id == seat_id), None)
-
             if seat:
                 seat_class = seat.seat_type
                 seat_price = seat.price
@@ -84,29 +82,42 @@ async def booking_summary(request):
     luggage_weight_price = float(form_data.get("luggage_weight_price", "0"))
     total_price = total_seat_price + luggage_weight_price
 
-    booking.create_payment(total_price)
+    # Create or update payment
+    if not booking.payment:
+        booking.create_payment(total_price)
+    else:
+        booking.payment.price = total_price
+
+    # Initialize prices
+    original_price = booking.payment.price
+    discounted_price = original_price
 
     # Handle Promo Code
-    code = form_data.get("code", "").strip().upper()  # Normalize case
+    code = form_data.get("code", "").strip().upper()
+    # Clean the code - remove any special characters and extra spaces
+    code = ''.join(c for c in code if c.isalnum() or c.isdigit())
     print(f"🔍 Checking Promo Code: '{code}'")
 
     user = controller.get_logged_in_user()
-    discount_percent = user.userdetail.search_promo(code)
-
-    # Ensure booking.payment exists before trying to use it
-    if booking.payment:
-        original_price = booking.payment.price  # Store the original price before discount
+    if user and code:
+        discount_percent = user.userdetail.search_promo(code)
+        
         if discount_percent > 0:
             booking.payment.discount_payment(discount_percent)
             discounted_price = booking.payment.price
-            user.userdetail.use_promo(code)
-            print(f"✅ Promo applied: {discount_percent}% off | {original_price} -> {discounted_price}")
+            
+            # Only mark promo as used if it's valid and applied successfully
+            if user.userdetail.use_promo(code):
+                print(f"✅ Promo applied: {discount_percent}% off | {original_price} -> {discounted_price}")
+            else:
+                print("⚠️ Failed to mark promo code as used")
         else:
-            discounted_price = original_price  # If no discount, keep original price
-            print("⚠️ No valid promo code applied")
+            print("⚠️ Invalid or expired promo code")
     else:
-        print("❌ Error: Booking payment not initialized!")
-        discounted_price = total_price  # No payment object, so no discount applied
+        if not user:
+            print("❌ No user logged in")
+        if not code:
+            print("ℹ️ No promo code provided")
 
     return Title("Booking Summary"), Div(
         Div(
