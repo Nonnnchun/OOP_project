@@ -8,8 +8,20 @@ from datetime import datetime, timedelta
 # ================================
 class Luggage:
     def __init__(self, kilogram):
-        self.kilogram = kilogram
-        self.price = 15
+        self.__kilogram = kilogram
+        self.__price = 15
+        
+    @property
+    def kilogram(self): return self.__kilogram
+    
+    @property
+    def price(self): return self.__price
+    
+    @kilogram.setter
+    def kilogram(self, value): self.__kilogram = value
+    
+    @price.setter
+    def price(self, value): self.__price = value
         
     def calculate_price(self):
         # Check if kilogram is a Luggage object (recursive case)
@@ -175,11 +187,23 @@ class UserDetail:
             
 class Seat:
     def __init__(self, seat_id, seat_type, price):
-        self.seat_id = seat_id
-        self.seat_type = seat_type
-        self.seat_status = True  # Available by default
-        self.price = price
-      
+        self.__seat_id = seat_id
+        self.__seat_type = seat_type
+        self.__seat_status = True  # Available by default
+        self.__price = price
+    
+    @property
+    def seat_id(self): return self.__seat_id
+    @property
+    def seat_type(self): return self.__seat_type
+    @property
+    def seat_status(self): return self.__seat_status
+    @property
+    def price(self): return self.__price
+    
+    @seat_status.setter
+    def seat_status(self, available): self.__seat_status = available
+    
     def update_seat_status(self, available=False):
         self.seat_status = available
         print(f"Seat {self.seat_id} status updated to: {'Available' if available else 'Unavailable'}")
@@ -189,8 +213,13 @@ class Seat:
 
 class Airport:
     def __init__(self, name, code):
-        self.name = name
-        self.code = code
+        self.__name = name
+        self.__code = code
+    
+    @property
+    def name(self): return self.__name
+    @property
+    def code(self): return self.__code
     
     def __str__(self):
         return f"{self.name} ({self.code})"
@@ -240,9 +269,23 @@ class Account:
 
 class Plane:
     def __init__(self, plane_id, aircraft):
-        self.plane_id = plane_id
-        self.aircraft = aircraft
-        self.seats = self._generate_seats()
+        self.__plane_id = plane_id
+        self.__aircraft = aircraft
+        self.__seats = self._generate_seats()
+    
+    @property
+    def plane_id(self): return self.__plane_id
+    @property
+    def aircraft(self): return self.__aircraft
+    @property
+    def seats(self): return self.__seats
+    
+    @plane_id.setter
+    def plane_id(self, new_id): self.__plane_id = new_id
+    @aircraft.setter
+    def aircraft(self, new_aircraft): self.__aircraft = new_aircraft
+    @seats.setter
+    def seats(self, new_seats): self.__seats = new_seats
     
     def _generate_seats(self):
         seats = []
@@ -323,44 +366,143 @@ class FlightRoute:
     def __init__(self, flight_id, origin_airport, destination_airport, departure_time, arrive_time, plane,
                  available_departure_dates=None, available_arrival_dates=None,
                  return_departure_dates=None, return_arrival_dates=None):
-        self.flight_id = flight_id
+        self.__flight_id = flight_id
         
         # Handle both string codes and Airport objects
         if isinstance(origin_airport, Airport):
-            self.origin = origin_airport.code
-            self.origin_airport = origin_airport
+            self.__origin = origin_airport.code
+            self.__origin_airport = origin_airport
         else:
-            self.origin = origin_airport
-            self.origin_airport = None
-            
+            self.__origin = origin_airport
+            self.__origin_airport = None
+
         if isinstance(destination_airport, Airport):
-            self.destination = destination_airport.code
-            self.destination_airport = destination_airport
+            self.__destination = destination_airport.code
+            self.__destination_airport = destination_airport
         else:
-            self.destination = destination_airport
-            self.destination_airport = None
+            self.__destination = destination_airport
+            self.__destination_airport = None
             
-        self.departure_time = departure_time
-        self.arrive_time = arrive_time
-        self.plane = plane
+        self.__departure_time = departure_time
+        self.__arrive_time = arrive_time
+        self.__plane = plane
         
-        # Additional fields from the second implementation
-        self.available_departure_dates = available_departure_dates or [departure_time]
-        self.available_arrival_dates = available_arrival_dates or [arrive_time]
-        self.return_departure_dates = return_departure_dates or []
-        self.return_arrival_dates = return_arrival_dates or []
+        self.__available_departure_dates = available_departure_dates or [departure_time]
+        self.__available_arrival_dates = available_arrival_dates or [arrive_time]
+        self.__return_departure_dates = return_departure_dates or []
+        self.__return_arrival_dates = return_arrival_dates or []
         
-        # Separate outbound and return seats
-        self.outbound_seats = []
-        self.return_seats = []
+        self.__outbound_seats = []
+        self.__return_seats = []
         
-        # Create deep copies of the plane's seats for this specific flight
         if plane:
             for seat in plane.seats:
-                # Create a new seat object with the same properties
                 new_seat = Seat(seat.seat_id, seat.seat_type, seat.price)
-                self.outbound_seats.append(new_seat)
+                self.__outbound_seats.append(new_seat)
+    @property
+    def origin_airport(self):
+        return self.__origin_airport
     
+    @property
+    def destination_airport(self):
+        return self.__destination_airport
+
+    @property
+    def flight_id(self):
+        return self.__flight_id
+    
+    @property
+    def origin(self):
+        return self.__origin
+    
+    @property
+    def destination(self):
+        return self.__destination
+    
+    @property
+    def departure_time(self):
+        return self.__departure_time
+    
+    @property
+    def arrive_time(self):
+        return self.__arrive_time
+    
+    @property
+    def plane(self):
+        return self.__plane
+    
+    @property
+    def available_departure_dates(self):
+        return self.__available_departure_dates
+    
+    @property
+    def available_arrival_dates(self):
+        return self.__available_arrival_dates
+    
+    @property
+    def return_departure_dates(self):
+        return self.__return_departure_dates
+    
+    @property
+    def return_arrival_dates(self):
+        return self.__return_arrival_dates
+    
+    @property
+    def outbound_seats(self):
+        return self.__outbound_seats
+    
+    @property
+    def return_seats(self):
+        return self.__return_seats
+    
+    @flight_id.setter
+    def flight_id(self, value):
+        self.__flight_id = value
+    
+    @origin.setter
+    def origin(self, value):
+        self.__origin = value
+    
+    @destination.setter
+    def destination(self, value):
+        self.__destination = value
+    
+    @departure_time.setter
+    def departure_time(self, value):
+        self.__departure_time = value
+    
+    @arrive_time.setter
+    def arrive_time(self, value):
+        self.__arrive_time = value
+    
+    @plane.setter
+    def plane(self, value):
+        self.__plane = value
+    
+    @available_departure_dates.setter
+    def available_departure_dates(self, value):
+        self.__available_departure_dates = value
+    
+    @available_arrival_dates.setter
+    def available_arrival_dates(self, value):
+        self.__available_arrival_dates = value
+    
+    @return_departure_dates.setter
+    def return_departure_dates(self, value):
+        self.__return_departure_dates = value
+    
+    @return_arrival_dates.setter
+    def return_arrival_dates(self, value):
+        self.__return_arrival_dates = value
+    
+    @outbound_seats.setter
+    def outbound_seats(self, value):
+        self.__outbound_seats = value
+    
+    @return_seats.setter
+    def return_seats(self, value):
+        self.__return_seats = value
+        
     def display_flight_info(self):
         print(f"Flight {self.flight_id}: {self.origin} -> {self.destination}")
         print(f"Departure: {self.departure_time}")
@@ -395,17 +537,41 @@ class Passenger:
     
     def __init__(self, firstname, lastname, phone=None, dob=None):
         Passenger._id_counter += 1
-        self.id = f"p{Passenger._id_counter}"
-        self.firstname = firstname
-        self.lastname = lastname
-        self.phone = phone
-        self.dob = dob
+        self.__id = f"p{Passenger._id_counter}"
+        self.__firstname = firstname
+        self.__lastname = lastname
+        self.__phone = phone
+        self.__dob = dob
 
+    @property
+    def id(self): return self.__id
+    @property
+    def firstname(self): return self.__firstname
+    @property
+    def lastname(self): return self.__lastname
+    @property
+    def phone(self): return self.__phone
+    @property
+    def dob(self): return self.__dob
+    
 class Payment:
     def __init__(self, price):
-        self.price = price
-        self.method = None
-        self.status = "Pending"
+        self.__price = price
+        self.__method = None
+        self.__status = "Pending"
+        
+    @property
+    def price(self): return self.__price
+    @property
+    def method(self): return self.__method
+    @property
+    def status(self): return self.__status
+    
+    @method.setter
+    def method(self, value): self.__method = value
+    @status.setter
+    def status(self, value): self.__status = value
+    
 
     def process_payment(self, method, card_number, cvv, exp):
         if method == "CreditCard":
@@ -426,14 +592,26 @@ class Payment:
 
 class PaymentMethod:
     def __init__(self, method_id):
-        self.method_id = method_id
+        self.__method_id = method_id
+    
+    @property
+    def method_id(self): return self.__method_id
+    @method_id.setter
+    def method_id(self, value): self.__method_id = value
        
 class ATMCard(PaymentMethod):
     def __init__(self, method_id, card_number, card_CVV, card_EXP):
         super().__init__(method_id)
-        self.card_number = card_number
-        self.card_CVV = card_CVV
-        self.card_EXP = card_EXP
+        self.__card_number = card_number
+        self.__card_CVV = card_CVV
+        self.__card_EXP = card_EXP
+    
+    @property
+    def card_number(self): return self.__card_number
+    @property
+    def card_CVV(self): return self.__card_CVV
+    @property
+    def card_EXP(self): return self.__card_EXP
 
 class CreditCard(ATMCard):
     def __init__(self, card_number, card_CVV, card_EXP, method_id="CreditCard"):
@@ -448,32 +626,91 @@ class Booking:
     
     def __init__(self, flight, booking_reference=None):
         # Generate booking reference if not provided
-        self.booking_reference = booking_reference or f"BK{randint(1000, 9999)}"
-        self.flight = flight
-        self.outbound_seat = None
-        self.return_seat = None
-        self.passengers = []
-        self.passenger_seats = {}
-        self.luggage_weight = 0
-        self.luggage = None
-        self.payment = None
-        self.status = 'Unpaid'
+        self.__booking_reference = booking_reference or f"BK{randint(1000, 9999)}"
+        self.__flight = flight
+        self.__outbound_seat = None
+        self.__return_seat = None
+        self.__passengers = []
+        self.__passenger_seats = {}
+        self.__luggage_weight = 0
+        self.__luggage = None
+        self.__payment = None
+        self.__status = 'Unpaid'
         
         # Auto-set the flight dates from the flight object
-        self.flight_date = flight.departure_time
-        self.arrival_time = flight.arrive_time
+        self.__flight_date = flight.departure_time
+        self.__arrival_time = flight.arrive_time
         
         # For round trips, initialize return flight information
-        self.return_flight_date = None
-        self.return_arrival_time = None
+        self.__return_flight_date = None
+        self.__return_arrival_time = None
         
         # Auto-set return flight dates if this is a round trip
         if flight.is_round_trip() and flight.return_departure_dates and flight.return_arrival_dates:
-            self.return_flight_date = flight.return_departure_dates[0]
-            self.return_arrival_time = flight.return_arrival_dates[0]
+            self.__return_flight_date = flight.return_departure_dates[0]
+            self.__return_arrival_time = flight.return_arrival_dates[0]
         
         # Add to class bookings list
         Booking.bookings.append(self)
+        
+    @property
+    def booking_reference(self): return self.__booking_reference
+    @property
+    def flight(self): return self.__flight
+    @property
+    def outbound_seat(self): return self.__outbound_seat
+    @property
+    def return_seat(self): return self.__return_seat
+    @property
+    def passengers(self): return self.__passengers
+    @property
+    def passenger_seats(self): return self.__passenger_seats
+    @property
+    def luggage_weight(self): return self.__luggage_weight
+    @property
+    def luggage(self): return self.__luggage
+    @property
+    def payment(self): return self.__payment
+    @property
+    def status(self): return self.__status
+    @property
+    def flight_date(self): return self.__flight_date
+    @property
+    def arrival_time(self): return self.__arrival_time
+    @property
+    def return_flight_date(self): return self.__return_flight_date
+    @property
+    def return_arrival_time(self): return self.__return_arrival_time
+    
+    @luggage.setter
+    def luggage(self, value): self.__luggage = value
+    @luggage_weight.setter
+    def luggage_weight(self, value): self.__luggage_weight = value
+    @passenger_seats.setter
+    def passenger_seats(self, value): self.__passenger_seats = value
+    @payment.setter
+    def payment(self, value): self.__payment = value
+    @status.setter
+    def status(self, value): self.__status = value
+    @flight_date.setter
+    def flight_date(self, value): self.__flight_date = value
+    @arrival_time.setter
+    def arrival_time(self, value): self.__arrival_time = value
+    @return_flight_date.setter
+    def return_flight_date(self, value): self.__return_flight_date = value
+    @return_arrival_time.setter
+    def return_arrival_time(self, value): self.__return_arrival_time = value
+    @outbound_seat.setter
+    def outbound_seat(self, value): self.__outbound_seat = value
+    @return_seat.setter
+    def return_seat(self, value): self.__return_seat = value
+    @passengers.setter
+    def passengers(self, value): self.__passengers = value
+    @booking_reference.setter
+    def booking_reference(self, value): self.__booking_reference = value
+    @flight.setter
+    def flight(self, value): self.__flight = value
+    
     
     def add_luggage(self, kilogram):
         # Check if kilogram is a Luggage object
@@ -661,14 +898,14 @@ class Booking:
 # Controller to manage users, flights, and luggage
 class Controller:
     def __init__(self):
-        self.planes = []
+        self.__planes = []
         self.__accounts = []
         self.__logged_in_user = None
         self.__flights = []
-        self.bookings = []
+        self.__bookings = []
         self._next_flight_id = 1
-        self.luggage_system = LuggagePricingSystem()
-        self.airports = []
+        self.__luggage_system = LuggagePricingSystem()
+        self.__airports = []
    
     @property
     def accounts(self): return self.__accounts
@@ -676,6 +913,14 @@ class Controller:
     def logged_in_user(self): return self.__logged_in_user
     @property
     def flights(self): return self.__flights
+    @property
+    def bookings(self): return self.__bookings
+    @property
+    def planes(self): return self.__planes
+    @property
+    def airports(self): return self.__airports
+    @property
+    def luggage_system(self): return self.__luggage_system
     
     @logged_in_user.setter
     def logged_in_user(self, user): self.__logged_in_user = user

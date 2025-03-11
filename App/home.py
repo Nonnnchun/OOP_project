@@ -2,7 +2,7 @@ from fasthtml.common import *
 from Backend import *
 from commonstyle import *
 
-app, rt = fast_app()
+app, rt = fast_app(hdrs=(Script("https://unpkg.com/htmx.org@1.9.6", defer=True),))
 home_app = app 
 
 @rt("/home")
@@ -98,85 +98,76 @@ def get():
     )
 
 @rt("/edit-profile", methods=["GET", "POST"])
-def edit_profile(firstname: str="",lastname: str = "", birthday:str="",phone_number: str = "", address: str = "", gender: str="",nationality: str=""):
+def edit_profile(firstname: str="", lastname: str="", birthday: str="", phone_number: str="", 
+                 address: str="", gender: str="", nationality: str=""):
     user = controller.get_logged_in_user()
     if not user:
         return RedirectResponse('/login', status_code=303)
     
     if firstname or lastname or phone_number or address or birthday or gender or nationality:  
-        user.userdetail.edit_profile(firstname = firstname,lastname=lastname, phone_number=phone_number, address=address, birthday=birthday, gender=gender,nationality= nationality)
-
-        # After saving, show the updated profile card
-        return Card(
-            H3("Profile Information", style="color: var(--primary-color); margin-bottom: 1.5rem;"),
-            P(f"Name: {user.userdetail.firstname} {user.userdetail.lastname}"),
-            P(f"Birthday: {user.userdetail.birthday}"),
-            P(f"Gender: {user.userdetail.gender}"),
-            P(f"Nationality: {user.userdetail.nationality}"),
-            P(f"Phone: {user.userdetail.phone_number}"),
-            P(f"Address: {user.userdetail.address}"),
-            Div(
-                Form(
-                    Button("Edit", cls="btn btn-primary", formaction="/edit-profile"),
-                    style="display: inline-block; margin-right: 1rem;"
-                ),
-                Form(
-                    Button("Back", cls="btn btn-secondary", formaction="/home"),
-                    style="display: inline-block;"
-                )
-            ),
-            cls="card"
+        user.userdetail.edit_profile(
+            firstname=firstname, lastname=lastname, phone_number=phone_number, 
+            address=address, birthday=birthday, gender=gender, nationality=nationality
         )
 
-    # Show the edit form
+        # ✅ Maintain full structure to prevent style issues
+        return Div(
+            COMMON_STYLES,  # Ensure styles are included in the update
+            Div(
+                Card(
+                    H3("Profile Information", style="color: var(--primary-color); margin-bottom: 1.5rem;"),
+                    P(f"Name: {user.userdetail.firstname} {user.userdetail.lastname}"),
+                    P(f"Birthday: {user.userdetail.birthday}"),
+                    P(f"Gender: {user.userdetail.gender}"),
+                    P(f"Nationality: {user.userdetail.nationality}"),
+                    P(f"Phone: {user.userdetail.phone_number}"),
+                    P(f"Address: {user.userdetail.address}"),
+                    Div(
+                        Form(Button("Edit", cls="btn btn-primary", formaction="/edit-profile"), style="display: inline-block; margin-right: 1rem;"),
+                        Form(Button("Back", cls="btn btn-secondary", formaction="/home"), style="display: inline-block;")
+                    ),
+                    cls="card"
+                ),
+                style="margin: 20px auto; max-width: 600px;"  # ✅ Ensures consistent styling
+            ),
+            id="profile-card"  # Ensure correct target for HTMX update
+        )
+
+    # ✅ Show edit form (unchanged)
     return Card(
         H3("Edit Profile", style="color: var(--primary-color);"),
         Form(
-            Label("Fitst Name"),
+            Label("First Name"),
             Input(name="firstname", type="text", value=user.userdetail.firstname),
-            
             Label("Last Name"),
             Input(name="lastname", type="text", value=user.userdetail.lastname),
-            
             Label("Birthday"),
             Input(name="birthday", type="date", value=user.userdetail.birthday),
-            
             Label("Phone Number"),
             Input(name="phone_number", type="text", value=user.userdetail.phone_number),
-            
             Label("Address"),
             Input(name="address", type="text", value=user.userdetail.address),
-            
-            Label("National"),
+            Label("Nationality"),
             Select(
                 Option("Thai", selected=user.userdetail.nationality == "Thai"),
                 Option("American", selected=user.userdetail.nationality == "American"),
                 Option("Other", selected=user.userdetail.nationality == "Other"),
-                name = "nationality"
+                name="nationality"
             ),
-            
             Label("Gender"),
             Select(
-                Option("Male", selected=user.userdetail.nationality == "Male"),
-                Option("Female", selected=user.userdetail.nationality == "Female"),
-                Option("Prefer not to tell", selected=user.userdetail.nationality == "Prefer not to tell"),
-                name = "gender"
+                Option("Male", selected=user.userdetail.gender == "Male"),
+                Option("Female", selected=user.userdetail.gender == "Female"),
+                Option("Prefer not to tell", selected=user.userdetail.gender == "Prefer not to tell"),
+                name="gender"
             ),
-            
-                
-            
-            Button("Save Changes", type="submit", 
-                hx_post="/edit-profile", 
-                hx_target="#profile-card", 
-                hx_swap="outerHTML",
-                style="background-color: var(--primary-color); padding: 10px; font-size: 16px;"),
+            Button("Save Changes", type="submit", hx_post="/edit-profile", hx_target="#profile-card", hx_swap="outerHTML"),
             method="post",
             style="display: flex; flex-direction: column; gap: 10px;"
         ),
         id="profile-card",
         style="border: 2px solid var(--primary-color); border-radius: 10px; padding: 20px; margin: 10px;"
     )
-    
 @rt("/password")
 def get():
     return Container(
@@ -192,16 +183,20 @@ def get():
                 Div(
                     Label("New Password", cls="form-label"),
                     Input(name="new_password", type="password", cls="form-input", required=True,
-                          hx_post="/check-password", hx_trigger="input", hx_target="#password-message"),
-                    Div(id="password-message", style="color: red; font-size: 0.9em;"),
+                          hx_post="/check-password",  # ✅ Sends input to /check-password
+                          hx_trigger="input",  # ✅ Fires on input change
+                          hx_target="#password-message"),  # ✅ Updates #password-message
+                    Div(id="password-message", style="color: red; font-size: 0.9em;"),  # ✅ Error will appear here
                     cls="form-group"
                 ),
                 Div(
                     Label("Confirm New Password", cls="form-label"),
                     Input(name="confirm_new_password", type="password", cls="form-input", required=True,
-                          hx_post="/check-confirm-password", hx_trigger="input", hx_target="#confirm-password-message",
-                          hx_include="[name='new_password']"),  # ✅ Make sure HTMX sends "new_password"
-                    Div(id="confirm-password-message", style="color: red; font-size: 0.9em;"),
+                          hx_post="/check-confirm-password",  # ✅ Sends input to /check-confirm-password
+                          hx_trigger="input",
+                          hx_target="#confirm-password-message",  # ✅ Updates #confirm-password-message
+                          hx_include="[name='new_password']"),  # ✅ Includes new_password field in the request
+                    Div(id="confirm-password-message", style="color: red; font-size: 0.9em;"),  # ✅ Error will appear here
                     cls="form-group"
                 ),
                 Button("Change Password", type="submit", cls="btn btn-primary"),
@@ -216,17 +211,23 @@ def get():
         )
     )
     
+    
 @rt("/check-confirm-password")
 def post(new_password: str = "", confirm_new_password: str = ""):
+    print(f"HTMX Confirm Request: {new_password} vs {confirm_new_password}")  # ✅ Debugging log
+
     if not confirm_new_password:
         return "Please confirm your password."
     if new_password != confirm_new_password:
         return "Passwords do not match."
-    return ""  # ✅ No error message if passwords match
+    
+    return "✅ Passwords match!"  # ✅ Returns a success message if valid
 
 
 @rt("/check-password")
-def post(password: str = ""):  # ✅ Default value to prevent 400 errors
+def post(password: str = ""):
+    print(f"HTMX Request Received: {password}")  # ✅ Debugging log (check console output)
+
     if not password:
         return "Please enter a password."
     if len(password) < 6:
@@ -240,7 +241,8 @@ def post(password: str = ""):  # ✅ Default value to prevent 400 errors
     if not re.search(r"[!@#$%^&*(),.?\"_:{}|<>]", password):
         return "Password must contain at least one special character (!@#$%^&* etc.)."
 
-    return ""  # No message if password is valid
+    return "✅ Password is valid!"  # ✅ Returns a success message if valid
+
 @rt("/passwordCheck", methods=["POST"])
 def password_change(old_password: str, new_password: str, confirm_new_password: str):
     user = controller.get_logged_in_user()
