@@ -7,23 +7,167 @@ register_login_app = app
 
 @rt("/register")
 def get():
-    form = Form(
-        Input(id="email", name="email", placeholder="Email", type="email", required=True),
-        Input(id="password", name="password", placeholder="Password", type="password", required=True,
-              hx_post="/check-password", hx_trigger="input", hx_target="#password-message"),
-        Div(id="password-message", style="color: red; font-size: 0.9em;"),  # Live feedback
+    register_styles = Style("""
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-image: url('/Picture/fu7.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
         
-        Input(id="confirm-password", name="confirm_password", placeholder="Confirm Password", type="password", required=True,
-              hx_post="/check-confirm-password", hx_trigger="input", hx_target="#confirm-password-message"),
-        Div(id="confirm-password-message", style="color: red; font-size: 0.9em;"),  # Live confirm password check
+        .overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
         
-        Input(id="firstname", name="firstname", placeholder="First Name", required=True),
-        Input(id="lastname", name="lastname", placeholder="Last Name", required=True),
-        Button("Register"),
+        .register-container {
+            width: 90%;
+            max-width: 450px;
+            padding: 40px;
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .register-title {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .form-control:focus {
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(79, 195, 247, 0.5);
+            box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.3);
+        }
+        
+        .error-message {
+            color: #ff6b6b;
+            font-size: 0.9em;
+            margin-top: 5px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        
+        .register-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: rgba(33, 150, 243, 0.8);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+        
+        .register-btn:hover {
+            background-color: rgba(33, 150, 243, 1);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .login-link a {
+            color: #4fc3f7;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .login-link a:hover {
+            color: #81d4fa;
+            text-decoration: underline;
+        }
+    """)
+
+    return Div(
+        register_styles,
+        Div(
+            Div(
+                Div(
+                    H1("Create Account", cls="register-title"),
+                    Form(
+                        Div(
+                            Input(id="email", name="email", placeholder="Email", type="email", required=True, cls="form-control"),
+                            cls="form-group"
+                        ),
+                        Div(
+                            Input(id="password", name="password", placeholder="Password", type="password", required=True,
+                                    hx_post="/check-password", hx_trigger="input", hx_target="#password-message", cls="form-control"),
+                            Div(id="password-message", cls="error-message"),
+                            cls="form-group"
+                        ),
+                        Div(
+                            Input(id="confirm-password", name="confirm_password", placeholder="Confirm Password", type="password", required=True,
+                                hx_post="/check-confirm-password", hx_trigger="input", hx_target="#confirm-password-message", cls="form-control"),
+                            Div(id="confirm-password-message", cls="error-message"),
+                            cls="form-group"
+                        ),
+                        Div(
+                            Input(id="firstname", name="firstname", placeholder="First Name", required=True, cls="form-control"),
+                            cls="form-group"
+                        ),
+                        Div(
+                            Input(id="lastname", name="lastname", placeholder="Last Name", required=True, cls="form-control"),
+                            cls="form-group"
+                        ),
+                        Button("Register", cls="register-btn"),
         action="/register",
         method="post"
+                    ),
+                    P(Span("Already have an account? ", cls=""), A("Login here", href="/login"), cls="login-link"),
+                    cls="register-container"
+                ),
+                cls="overlay"
+            )
+        )
     )
-    return Titled("Register", form)
 
 @rt("/check-password")
 def post(password: str):
@@ -49,367 +193,569 @@ def post(password: str = "", confirm_password: str = ""):
 @rt("/register")
 def post(email: str, password: str, confirm_password: str, firstname: str, lastname: str):
     # Backend password validation (same rules as in /check-password)
+    error_message = None
+    
     if len(password) < 6:
-        return Container(
-            P("Password must be at least 6 characters long.", style="color: red;"),
-            Form(Button("Return to Register Page", type="submit", formaction="/register"))
-        )
-    if not re.search(r"[A-Z]", password):
-        return Container(
-            P("Password must contain at least one uppercase letter.", style="color: red;"),
-            Form(Button("Return to Register Page", type="submit", formaction="/register"))
-        )
-    if not re.search(r"[a-z]", password):
-        return Container(
-            P("Password must contain at least one lowercase letter.", style="color: red;"),
-            Form(Button("Return to Register Page", type="submit", formaction="/register"))
-        )
-    if not re.search(r"\d", password):
-        return Container(
-            P("Password must contain at least one number.", style="color: red;"),
-            Form(Button("Return to Register Page", type="submit", formaction="/register"))
-        )
-    if not re.search(r"[!@#$%^&*(),.?\"_:{}|<>]", password):
-        return Container(
-            P("Password must contain at least one special character (!@#$%^&* etc.).", style="color: red;"),
-            Form(Button("Return to Register Page", type="submit", formaction="/register"))
-        )
-    if password != confirm_password:
-        return Container(
-            P("Password not match", style="color: red;"),
-            Form(Button("Return to Register Page", type="submit", formaction="/register"))
-        )
-    # If password passes validation, proceed with registration
-    message = controller.register(email, password, firstname, lastname)
-
-    if "successful" in message:
-        return Container(
-            COMMON_STYLES,
+        error_message = "Password must be at least 6 characters long."
+    elif not re.search(r"[A-Z]", password):
+        error_message = "Password must contain at least one uppercase letter."
+    elif not re.search(r"[a-z]", password):
+        error_message = "Password must contain at least one lowercase letter."
+    elif not re.search(r"\d", password):
+        error_message = "Password must contain at least one number."
+    elif not re.search(r"[!@#$%^&*(),.?\"_:{}|<>]", password):
+        error_message = "Password must contain at least one special character (!@#$%^&* etc.)."
+    elif password != confirm_password:
+        error_message = "Passwords do not match."
+        
+    if error_message:
+        error_styles = Style("""
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: 'Arial', sans-serif;
+                background-image: url('/Picture/fu7.jpg');
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+                min-height: 100vh;
+                color: #fff;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .overlay {
+                background-color: rgba(0, 0, 0, 0.5);
+                min-height: 100vh;
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .error-container {
+                width: 90%;
+                max-width: 400px;
+                padding: 40px;
+                background-color: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(10px);
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                text-align: center;
+            }
+            
+            .error-icon {
+                font-size: 50px;
+                color: #ff6b6b;
+                margin-bottom: 20px;
+            }
+            
+            .error-title {
+                color: #fff;
+                font-size: 24px;
+                margin-bottom: 15px;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            
+            .error-message {
+                color: rgba(255, 255, 255, 0.9);
+                margin-bottom: 30px;
+                font-size: 16px;
+                line-height: 1.5;
+            }
+            
+            .return-btn {
+                padding: 12px 25px;
+                background-color: rgba(33, 150, 243, 0.8);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+                width: 100%;
+            }
+            
+            .return-btn:hover {
+                background-color: rgba(33, 150, 243, 1);
+                transform: translateY(-3px);
+                box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+            }
+        """)
+        
+        return Div(
+            error_styles,
             Div(
-                H1("Registration Successful!", cls="title"),
-                P(message, style="text-align: center; color: var(--success-color); font-size: 1.2rem; margin-bottom: 2rem;"),
-                A(
-                    "Back to Login",
-                    href="/login",
-                    style="""display: block;
-                    background-color: #FFEB99;
-                    color: #333; width: 100%; 
-                    padding: 12px; 
-                    border: none; 
-                    border-radius: 8px; 
-                    font-size: 16px; 
-                    font-weight: bold; 
-                    cursor: pointer; 
-                    transition: 0.3s ease; 
-                    border: 2px solid #F9D01C;
-                    text-decoration: none;
-                    text-align: center;
-                    max-width: 300px;
-                    margin: 0 auto;""",
-                    onmouseover="this.style.backgroundColor='#F9D01C'",
-                    onmouseout="this.style.backgroundColor='#FFEB99'"
+                Div(
+                    Div("✕", cls="error-icon"),
+                    H2("Registration Failed", cls="error-title"),
+                    P(error_message, cls="error-message"),
+                    Form(
+                        Button("Try Again", cls="return-btn"),
+                        action="/register",
+                        method="get"
+                    ),
+                    cls="error-container"
                 ),
-                cls="card"
+                cls="overlay"
             )
         )
     else:
-        return Container(
-            COMMON_STYLES,
-            Div(
-                H1("Registration Failed", cls="title"),
-                P(message, style="text-align: center; color: var(--error-color); font-size: 1.2rem; margin-bottom: 2rem;"),
-                Form(
-                    Button("Try Again", 
-                        style="""background-color: #FFEB99;
-                        color: #333; width: 100%; 
-                        padding: 12px; 
+        message = controller.register(email, password, firstname, lastname)
+
+    if "successful" in message:
+            success_styles = Style("""
+                body {
+                    margin: 0;
+                    padding: 0;
+                    font-family: 'Arial', sans-serif;
+                    background-image: url('/Picture/fu7.jpg');
+                    background-size: cover;
+                    background-position: center;
+                    background-attachment: fixed;
+                    min-height: 100vh;
+                    color: #fff;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+                
+                .overlay {
+                    background-color: rgba(0, 0, 0, 0.5);
+                    min-height: 100vh;
+                    width: 100%;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+                
+                .success-container {
+                    width: 90%;
+                    max-width: 400px;
+                    padding: 40px;
+                    background-color: rgba(255, 255, 255, 0.15);
+                    backdrop-filter: blur(10px);
+                    border-radius: 15px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    text-align: center;
+                }
+                
+                .success-icon {
+                    font-size: 50px;
+                    color: #4CAF50;
+                    margin-bottom: 20px;
+                }
+                
+                .success-title {
+                    color: #fff;
+                    font-size: 24px;
+                    margin-bottom: 15px;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                }
+                
+                .success-message {
+                    color: rgba(255, 255, 255, 0.9);
+                    margin-bottom: 30px;
+                    font-size: 16px;
+                    line-height: 1.5;
+                }
+                
+                .login-btn {
+                    padding: 12px 25px;
+                    background-color: rgba(33, 150, 243, 0.8);
+                    color: white;
+                    border: none; 
+                    border-radius: 8px; 
+                    font-size: 16px; 
+                    font-weight: 500;
+                    cursor: pointer; 
+                    transition: all 0.3s ease;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+                    width: 100%;
+                    text-decoration: none;
+                    display: inline-block;
+                }
+                
+                .login-btn:hover {
+                    background-color: rgba(33, 150, 243, 1);
+                    transform: translateY(-3px);
+                    box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+                }
+            """)
+            
+            return Div(
+                success_styles,
+                Div(
+                    Div(
+                        Div("✓", cls="success-icon"),
+                        H2("Registration Successful!", cls="success-title"),
+                        P(message, cls="success-message"),
+                        A("Go to Login", href="/login", cls="login-btn"),
+                        cls="success-container"
+                    ),
+                    cls="overlay"
+            )
+        )
+    else:
+            error_styles = Style("""
+                body {
+                    margin: 0;
+                    padding: 0;
+                    font-family: 'Arial', sans-serif;
+                    background-image: url('/Picture/fu7.jpg');
+                    background-size: cover;
+                    background-position: center;
+                    background-attachment: fixed;
+                    min-height: 100vh;
+                    color: #fff;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+                
+                .overlay {
+                    background-color: rgba(0, 0, 0, 0.5);
+                    min-height: 100vh;
+                    width: 100%;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+                
+                .error-container {
+                    width: 90%;
+                    max-width: 400px;
+                    padding: 40px;
+                    background-color: rgba(255, 255, 255, 0.15);
+                    backdrop-filter: blur(10px);
+                    border-radius: 15px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    text-align: center;
+                }
+                
+                .error-icon {
+                    font-size: 50px;
+                    color: #ff6b6b;
+                    margin-bottom: 20px;
+                }
+                
+                .error-title {
+                    color: #fff;
+                    font-size: 24px;
+                    margin-bottom: 15px;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                }
+                
+                .error-message {
+                    color: rgba(255, 255, 255, 0.9);
+                    margin-bottom: 30px;
+                    font-size: 16px;
+                    line-height: 1.5;
+                }
+                
+                .return-btn {
+                    padding: 12px 25px;
+                    background-color: rgba(33, 150, 243, 0.8);
+                    color: white;
                         border: none; 
                         border-radius: 8px; 
                         font-size: 16px; 
-                        font-weight: bold; 
+                    font-weight: 500;
                         cursor: pointer; 
-                        transition: 0.3s ease; 
-                        border: 2px solid #F9D01C;""",
-                        
-                        onmouseover="this.style.backgroundColor='#F9D01C'",
-                        onmouseout="this.style.backgroundColor='#FFEB99'"),
-                    formaction="/register",
-                    style="max-width: 300px; margin: 0 auto;"
-                ),  
-                cls="card"
+                    transition: all 0.3s ease;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+                    width: 100%;
+                }
+                
+                .return-btn:hover {
+                    background-color: rgba(33, 150, 243, 1);
+                    transform: translateY(-3px);
+                    box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+                }
+            """)
+            
+            return Div(
+                error_styles,
+                Div(
+                    Div(
+                        Div("✕", cls="error-icon"),
+                        H2("Registration Failed", cls="error-title"),
+                        P(message, cls="error-message"),
+                        Form(
+                            Button("Try Again", cls="return-btn"),
+                            action="/register",
+                            method="get"
+                        ),
+                        cls="error-container"
+                    ),
+                    cls="overlay"
             )
         )
 
 # Login Page
 @rt("/login")
 def get():
-    styles = Style("""
+    login_styles = Style("""
         body {
             margin: 0;
             padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-image: url('/Picture/fu7.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             min-height: 100vh;
-            background: linear-gradient(135deg, #1a1f2c, #2d3748, #1a1f2c);
+            color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
+        .overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
         .login-container {
-            width: 80%;
-            max-width: 1200px;
-            height: 600px;
-            display: flex;
-            background: linear-gradient(135deg, #FDDFD6, #D3ECDC, #FCF9DA);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
-
-        .login-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(252, 222, 34, 0.1), rgba(244, 217, 193, 0.1));
-            pointer-events: none;
-            border-radius: 20px;
-        }
-
-        .login-image-section {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .login-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-            opacity: 0.9;
-            filter: brightness(0.8);
-            transition: transform 0.3s ease;
-        }
-
-        .login-image:hover {
-            transform: scale(1.05);
-        }
-
-        .login-form-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 3rem;
-            background: rgba(26, 31, 44, 0.98);
-            position: relative;
-            z-index: 1;
-        }
-
-        .login-header {
-            position: absolute;
-            top: 2rem;
-            left: 2rem;
-            right: 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .login-logo {
-            color: #FCDE22;
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .login-logo:hover {
-            color: #F4D9C1;
-        }
-
-        .register-link {
-            color: #FCDE22;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            padding: 0.5rem 1rem;
-            border: 1px solid #FCDE22;
-            border-radius: 20px;
-        }
-
-        .register-link:hover {
-            background: #FCDE22;
-            color: #1a1f2c;
-        }
-
-        .login-form {
-            width: 100%;
+            width: 90%;
             max-width: 400px;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            border: 1px solid rgba(252, 222, 34, 0.2);
+            padding: 40px;
+            background-color: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .form-title {
-            color: #FCDE22;
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
+        .login-title {
             text-align: center;
-            font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            color: #fff;
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
         }
-
-        .form-label {
-            display: block;
-            color: #E1EBF8;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .form-input {
+        
+        .form-control {
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid rgba(252, 222, 34, 0.2);
+            padding: 12px 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            color: #E1EBF8;
+            color: #fff;
+            font-size: 16px;
             transition: all 0.3s ease;
-            font-size: 1rem;
         }
-
-        .form-input:focus {
+        
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .form-control:focus {
             outline: none;
-            border-color: #FCDE22;
-            box-shadow: 0 0 0 2px rgba(252, 222, 34, 0.2);
-            background: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(79, 195, 247, 0.5);
+            box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.3);
         }
-
-        .form-input::placeholder {
-            color: rgba(225, 235, 248, 0.5);
-        }
-
-        .login-button {
+        
+        .login-btn {
             width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, #FCDE22, #F4D9C1);
+            padding: 12px;
+            background-color: rgba(33, 150, 243, 0.8);
+            color: white;
             border: none;
             border-radius: 8px;
-            color: #1a1f2c;
-            font-weight: bold;
+            font-size: 16px;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-size: 1.1rem;
+            margin-top: 10px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
         }
-
-        .login-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(252, 222, 34, 0.3);
-            background: linear-gradient(135deg, #F4D9C1, #FCDE22);
+        
+        .login-btn:hover {
+            background-color: rgba(33, 150, 243, 1);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
         }
-
-        @media (max-width: 768px) {
-            .login-container {
-                width: 95%;
-                flex-direction: column;
-                height: auto;
-            }
-
-            .login-image-section {
-                height: 200px;
-            }
-
-            .login-form-section {
-                padding: 2rem;
-            }
+        
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .register-link a {
+            color: #4fc3f7;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .register-link a:hover {
+            color: #81d4fa;
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            background-color: rgba(255, 107, 107, 0.2);
+            border-left: 4px solid #ff6b6b;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 14px;
+            display: none;
         }
     """)
 
-    return Container(
+    return Div(
+        login_styles,
         Div(
-            # Left section with image
             Div(
-                Img(src="/Picture/fu4.jpg", cls="login-image"),
-                cls="login-image-section"
-            ),
-            
-            # Right section with login form
-            Div(
-                # Header with logo and register link
-                Div(
-                    A("Shit Airlines", href="/", cls="login-logo"),
-                    A("Register", href="/register", cls="register-link"),
-                    cls="login-header"
-                ),
-                
-                # Login Form
+                H1("Welcome Back", cls="login-title"),
+                Div(id="login-error", cls="error-message"),
         Form(
-                    H2("Welcome Back", cls="form-title"),
-                    
-                    # Email input
                     Div(
-                        Label("Email", cls="form-label"),
-                        Input(type="email", name="email", placeholder="Enter your email", 
-                            required=True, cls="form-input"),
+                        Input(id="email", name="email", placeholder="Email", type="email", required=True, cls="form-control"),
                         cls="form-group"
                     ),
-                    
-                    # Password input
                     Div(
-                        Label("Password", cls="form-label"),
-                        Input(type="password", name="password", placeholder="Enter your password", 
-                            required=True, cls="form-input"),
+                        Input(id="password", name="password", placeholder="Password", type="password", required=True, cls="form-control"),
                         cls="form-group"
                     ),
-                    
-                    # Login button
-                    Button("Login", type="submit", cls="login-button"),
-                    
-                    action="/login", method="post",
-                    cls="login-form"
+                    Button("Login", cls="login-btn"),
+                    action="/login",
+                    method="post"
                 ),
-                cls="login-form-section"
+                P(Span("Don't have an account? ", cls=""), A("Register here", href="/register"), cls="register-link"),
+                cls="login-container"
             ),
-            cls="login-container"
-        ),
-        styles
+            cls="overlay"
+        )
     )
 
 @rt("/login")
 def post(email: str, password: str):
     message = controller.login(email, password)
-    return RedirectResponse('/home', status_code=303) if "success" in message else Container(
-        P(message), 
-        Form(Button("Return to Login Page", 
-            style="""background-color: #FFEB99;
-            color: #333; width: 100%; 
-            padding: 12px; 
+    if "success" in message:
+        return RedirectResponse('/home', status_code=303)
+    else:
+        error_styles = Style("""
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: 'Arial', sans-serif;
+                background-image: url('/Picture/fu7.jpg');
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+                min-height: 100vh;
+                color: #fff;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .overlay {
+                background-color: rgba(0, 0, 0, 0.5);
+                min-height: 100vh;
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .error-container {
+                width: 90%;
+                max-width: 400px;
+                padding: 40px;
+                background-color: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(10px);
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                text-align: center;
+            }
+            
+            .error-icon {
+                font-size: 50px;
+                color: #ff6b6b;
+                margin-bottom: 20px;
+            }
+            
+            .error-title {
+                color: #fff;
+                font-size: 24px;
+                margin-bottom: 15px;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            
+            .error-message {
+                color: rgba(255, 255, 255, 0.9);
+                margin-bottom: 30px;
+                font-size: 16px;
+                line-height: 1.5;
+            }
+            
+            .return-btn {
+                padding: 12px 25px;
+                background-color: rgba(33, 150, 243, 0.8);
+                color: white;
             border: none; 
             border-radius: 8px; 
             font-size: 16px; 
-            font-weight: bold; 
+                font-weight: 500;
             cursor: pointer; 
-            transition: 0.3s ease; 
-            border: 2px solid #F9D01C;""",
+                transition: all 0.3s ease;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+                width: 100%;
+            }
             
-            onmouseover="this.style.backgroundColor='#F9D01C'",
-            onmouseout="this.style.backgroundColor='#FFEB99'"),
+            .return-btn:hover {
+                background-color: rgba(33, 150, 243, 1);
+                transform: translateY(-3px);
+                box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+            }
+        """)
         
-        formaction="/login")
+        return Div(
+            error_styles,
+            Div(
+                Div(
+                    Div("✕", cls="error-icon"),
+                    H2("Login Failed", cls="error-title"),
+                    P(message, cls="error-message"),
+                    Form(
+                        Button("Return to Login", cls="return-btn"),
+                        action="/login",
+                        method="get"
+                    ),
+                    cls="error-container"
+                ),
+                cls="overlay"
+            )
     )

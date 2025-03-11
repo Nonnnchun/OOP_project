@@ -11,54 +11,191 @@ def get():
     if not user:
         return RedirectResponse('/login', status_code=303)
 
-    return Container(
-        COMMON_STYLES,
-        Div(
-            H1(f"Welcome, {user.userdetail.firstname} {user.userdetail.lastname}", cls="title"),
-            P(f"Total points: {user.userdetail.points}", style="text-align: center; margin-bottom: 2rem;"),
-            
-            Div(
-                Card(
-                    H3("Find & Book", style="color: var(--primary-color);"),
-                    P("Find a flight"),
-                    Form(Button("Search", type="submit", cls="btn btn-primary", formaction="/flight_search")),
-                    style="text-align: center;"
-                ),
-                
-                Card(
-                    H3("View Profile", style="color: var(--primary-color);"),
-                    P("View my personal details"),
-                    Form(Button("View", type="submit", cls="btn btn-primary", formaction="/profile")),
-                    style="text-align: center;"
-                ),
-                
-                Card(
-                    H3("My Bookings", style="color: var(--primary-color);"),
-                    P("View all booked flights"),
-                    Form(Button("View", type="submit", cls="btn btn-primary", formaction="/manage-booking")),
-                    style="text-align: center;"
-                ),
-                
-                Card(
-                    H3("Promocode", style="color: var(--primary-color);"),
-                    P("View all of my promocodes"),
-                    Form(Button("View", type="submit", cls="btn btn-primary", formaction="/promocode")),
-                    style="text-align: center;"
-                ),
-                
-                Card(
-                    H3("Change Password", style="color: var(--primary-color);"),
-                    P("New pass, new security"),
-                    Form(Button("Change", type="submit", cls="btn btn-primary", formaction="/password")),
-                    style="text-align: center;"
-                ),
-                cls="grid"
-            ),
+    menu_styles = Style("""
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-image: url('/Picture/fu7.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #fff;
+        }
+        .overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            min-height: 100vh;
+            width: 100%;
+            padding: 30px 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .welcome-card {
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .welcome-header {
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 28px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .points-display {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 18px;
+            margin-bottom: 0;
+        }
+        .points-value {
+            color: #4fc3f7;
+            font-weight: bold;
+            font-size: 22px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .menu-container {
+            max-width: 450px;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 18px 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+        .menu-item:hover .menu-icon {
+            transform: scale(1.2);
+        }
+        .menu-icon {
+            margin-right: 20px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(79, 195, 247, 0.2);
+            border-radius: 50%;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .menu-text {
+            font-size: 16px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .menu-item:nth-child(1) .menu-icon {
+            background-color: rgba(156, 39, 176, 0.3);
+        }
+        .menu-item:nth-child(2) .menu-icon {
+            background-color: rgba(33, 150, 243, 0.3);
+        }
+        .menu-item:nth-child(3) .menu-icon {
+            background-color: rgba(0, 188, 212, 0.3);
+        }
+        .menu-item:nth-child(4) .menu-icon {
+            background-color: rgba(121, 85, 72, 0.3);
+        }
+        .menu-item:nth-child(5) .menu-icon {
+            background-color: rgba(63, 81, 181, 0.3);
+        }
+        .menu-item:nth-child(6) .menu-icon {
+            background-color: rgba(233, 30, 99, 0.3);
+        }
+        .menu-item::after {
+            content: '›';
+            position: absolute;
+            right: 25px;
+            font-size: 24px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .menu-item:hover::after {
+            opacity: 1;
+            right: 20px;
+        }
+    """)
 
-            Form(
-                Button("Logout", type="submit", cls="btn btn-secondary", formaction="/logout"),
-                style="text-align: center; margin-top: 2rem;"
-            )
+    return Div(
+        menu_styles,
+        Div(
+            Div(
+                Div(
+                    H1(f"Welcome, {user.userdetail.firstname} {user.userdetail.lastname}", cls="welcome-header"),
+                    P(Span("Total points: ", cls=""), Span(f"{user.userdetail.points}", cls="points-value"), cls="points-display"),
+                    cls="welcome-card"
+                ),
+                
+                Div(
+                    A(
+                        Div(Span("🎫", cls=""), cls="menu-icon"),
+                        Span("My Bookings", cls="menu-text"),
+                        href="/manage-booking",
+                        cls="menu-item"
+                    ),
+                    A(
+                        Div(Span("✈️", cls=""), cls="menu-icon"),
+                        Span("Book flight", cls="menu-text"),
+                        href="/flight_search",
+                        cls="menu-item"
+                    ),
+                    A(
+                        Div(Span("✏️", cls=""), cls="menu-icon"),
+                        Span("Edit Profile", cls="menu-text"),
+                        href="/edit-profile",
+                        cls="menu-item"
+                    ),
+                    A(
+                        Div(Span("🎟️", cls=""), cls="menu-icon"),
+                        Span("Vouchers", cls="menu-text"),
+                        href="/promocode",
+                        cls="menu-item"
+                    ),
+                    A(
+                        Div(Span("🔒", cls=""), cls="menu-icon"),
+                        Span("Change Password", cls="menu-text"),
+                        href="/password",
+                        cls="menu-item"
+                    ),
+                    A(
+                        Div(Span("🚪", cls=""), cls="menu-icon"),
+                        Span("Log Out", cls="menu-text"),
+                        href="/logout",
+                        cls="menu-item"
+                    ),
+                    cls="menu-container"
+                ),
+                cls="container"
+            ),
+            cls="overlay"
         )
     )
 
@@ -68,32 +205,156 @@ def get():
     if not user:
         return RedirectResponse('/login', status_code=303)
 
-    return Container(
-        COMMON_STYLES,
+    profile_styles = Style("""
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-image: url('/Picture/fu4.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #fff;
+        }
+        .overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            min-height: 100vh;
+            width: 100%;
+            padding: 30px 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .title {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 30px;
+            font-size: 32px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .profile-card {
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        .profile-header {
+            color: #4fc3f7;
+            margin-bottom: 25px;
+            font-size: 24px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 15px;
+        }
+        .profile-info {
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: flex;
+        }
+        .profile-label {
+            font-weight: bold;
+            width: 120px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .profile-value {
+            flex: 1;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 15px;
+        }
+        .btn {
+            padding: 12px 25px;
+            border-radius: 30px;
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-primary {
+            background-color: rgba(33, 150, 243, 0.8);
+            color: white;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+        .btn-primary:hover {
+            background-color: rgba(33, 150, 243, 1);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+    """)
+
+    return Div(
+        profile_styles,
         Div(
-            H1("My Profile", cls="title"),
             Div(
+                H1("My Profile", cls="title"),
                 Div(
-                    H3("Profile Information", style="color: var(--primary-color); margin-bottom: 1.5rem;"),
-                    P(f"Name: {user.userdetail.firstname} {user.userdetail.lastname}"),
-                    P(f"Birthday: {user.userdetail.birthday}"),
-                    P(f"Gender: {user.userdetail.gender}"),
-                    P(f"Nationality: {user.userdetail.nationality}"),
-                    P(f"Phone: {user.userdetail.phone_number}"),
-                    P(f"Address: {user.userdetail.address}"),
+                    H3("Profile Information", cls="profile-header"),
+                    Div(
+                        Span("Name:", cls="profile-label"),
+                        Span(f"{user.userdetail.firstname} {user.userdetail.lastname}", cls="profile-value"),
+                        cls="profile-info"
+                    ),
+                    Div(
+                        Span("Birthday:", cls="profile-label"),
+                        Span(f"{user.userdetail.birthday}", cls="profile-value"),
+                        cls="profile-info"
+                    ),
+                    Div(
+                        Span("Gender:", cls="profile-label"),
+                        Span(f"{user.userdetail.gender}", cls="profile-value"),
+                        cls="profile-info"
+                    ),
+                    Div(
+                        Span("Nationality:", cls="profile-label"),
+                        Span(f"{user.userdetail.nationality}", cls="profile-value"),
+                        cls="profile-info"
+                    ),
+                    Div(
+                        Span("Phone:", cls="profile-label"),
+                        Span(f"{user.userdetail.phone_number}", cls="profile-value"),
+                        cls="profile-info"
+                    ),
+                    Div(
+                        Span("Address:", cls="profile-label"),
+                        Span(f"{user.userdetail.address}", cls="profile-value"),
+                        cls="profile-info"
+                    ),
                     Div(
                         Form(
-                            Button("Edit", cls="btn btn-primary", formaction="/edit-profile"),
-                            style="display: inline-block; margin-right: 1rem;"
+                            Button("Edit Profile", cls="btn btn-primary", formaction="/edit-profile"),
                         ),
                         Form(
-                            Button("Back", cls="btn btn-secondary", formaction="/home"),
-                            style="display: inline-block;"
-                        )
+                            Button("Back to Home", cls="btn btn-secondary", formaction="/home"),
+                        ),
+                        cls="button-group"
                     ),
-                    cls="card"
-                )
-            )
+                    cls="profile-card"
+                ),
+                cls="container"
+            ),
+            cls="overlay"
         )
     )
 

@@ -648,8 +648,14 @@ class Payment:
             self.method = CreditCard(card_number, cvv, exp)
         elif method == "DebitCard":
             self.method = DebitCard(card_number, cvv, exp)
-        self.status = "Completed"
-        return True
+            
+        # Call the payment method's process_payment
+        if self.method:
+            result = self.method.process_payment(self.price)
+            if result and result.get("status") == "Paid":
+                self.status = "Completed"
+                return True
+        return False
         
     def refund(self, amount=None):
         if not self.method:
@@ -676,6 +682,10 @@ class PaymentMethod:
     def method_id(self): return self.__method_id
     @method_id.setter
     def method_id(self, value): self.__method_id = value
+    
+    def process_payment(self, amount):
+        # Abstract method to be implemented by subclasses
+        raise NotImplementedError("Subclasses must implement process_payment method")
 
 class ATMCard(PaymentMethod):
     def __init__(self, method_id, card_number, card_CVV, card_EXP):
@@ -694,10 +704,36 @@ class ATMCard(PaymentMethod):
 class CreditCard(ATMCard):
     def __init__(self, card_number, card_CVV, card_EXP, method_id="CreditCard"):
         super().__init__(method_id, card_number, card_CVV, card_EXP)
+    
+    def process_payment(self, amount):
+        # Process the payment logic here
+        return {
+            "amount": amount,
+            "status": "Paid"
+        }
 
 class DebitCard(ATMCard):
     def __init__(self, card_number, card_CVV, card_EXP, method_id="DebitCard"):
         super().__init__(method_id, card_number, card_CVV, card_EXP)
+        self.__fee = 0.07  # 7% fee for debit card transactions
+    
+    @property
+    def fee(self):
+        return self.__fee
+        
+    def calculate_fee(self, amount):
+        return amount * self.__fee
+        
+    def process_payment(self, amount):
+        fee_amount = self.calculate_fee(amount)
+        total_amount = amount + fee_amount
+        # Process the payment logic here
+        return {
+            "original_amount": amount,
+            "fee_amount": fee_amount,
+            "total_amount": total_amount,
+            "status": "Paid"
+        }
 
 class Booking:
     bookings = []  # Class variable to store all bookings

@@ -105,6 +105,29 @@ async def payment(request):
             const expiryError = document.getElementById('expiry-error');
             const cvvInput = document.querySelector('input[name="cvv"]');
             const cvvError = document.getElementById('cvv-error');
+            const cardTypeSelect = document.querySelector('select[name="card_type"]');
+            const totalAmountElement = document.getElementById('total-amount');
+            const originalPrice = """ + str(total_price) + """;
+            const debitFee = 0.07; // 7% fee for debit card
+            
+            // Update total amount when card type changes
+            function updateTotalAmount() {
+                if (cardTypeSelect.value === 'DebitCard') {
+                    const fee = originalPrice * debitFee;
+                    const totalWithFee = originalPrice + fee;
+                    totalAmountElement.textContent = `Total Amount: $${totalWithFee.toFixed(2)} (includes 7% fee)`;
+                    document.getElementById('final-price').value = totalWithFee.toFixed(2);
+                } else {
+                    totalAmountElement.textContent = `Total Amount: $${originalPrice.toFixed(2)}`;
+                    document.getElementById('final-price').value = originalPrice.toFixed(2);
+                }
+            }
+            
+            // Initial update
+            updateTotalAmount();
+            
+            // Listen for changes on card type
+            cardTypeSelect.addEventListener('change', updateTotalAmount);
             
             // Allow only digits in card number field
             cardNumberInput.addEventListener('input', function(e) {
@@ -194,7 +217,7 @@ async def payment(request):
     
     return Title("Payment"), styles, validation_script, Div(
         H1("Payment Details"),
-        P(f"Total Amount: ${total_price}"),
+        P(f"Total Amount: ${total_price}", id="total-amount"),
         Form(
             Div(
                 Label("Card Type:"),
@@ -228,6 +251,7 @@ async def payment(request):
                 cls="card-details form-group"
             ),
             Input(type="hidden", name="booking_ref", value=booking_ref),
+            Input(type="hidden", name="final_price", id="final-price", value=str(total_price)),
             Button("Pay Now", type="submit", cls="payment-btn"),
             action="/payment_confirmation",
             method="post",
@@ -243,10 +267,15 @@ async def payment_confirmation(request):
     card_number = form_data.get("card_number", "").strip()
     exp = form_data.get("expiry", "").strip()
     cvv = form_data.get("cvv", "").strip()
+    final_price = float(form_data.get("final_price", "0").strip())
 
     booking = next((b for b in controller.bookings if b.booking_reference == booking_ref), None)
     if not booking:
         return Title("Error"), H1("Booking not found")
+    
+    # Update the payment price if it's different (due to debit card fee)
+    if booking.payment.price != final_price:
+        booking.payment.price = final_price
     
     booking.update_booking_status()
     controller.add_booking_history(booking)
