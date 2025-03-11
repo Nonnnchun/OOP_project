@@ -4,6 +4,7 @@ from commonstyle import *
 
 app, rt = fast_app()
 flightsearch_app = app 
+
 @rt("/flight_search")
 def search():
     styles = Style("""

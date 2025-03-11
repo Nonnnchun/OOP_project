@@ -1,0 +1,25 @@
+@startuml SelectFlight
+actor "User" as user
+participant UI
+participant Controller
+participant FlightRoute
+
+== Select Flight ==
+
+loop
+   user -> UI: click_flight_option()
+   activate UI
+   UI -> Controller: select_flight()
+   activate Controller 
+   Controller -> FlightRoute: get_flight_details()
+   activate FlightRoute
+   FlightRoute -> FlightRoute: validate_selection()
+   FlightRoute --> Controller: return flight_details
+   deactivate FlightRoute
+   Controller --> UI: return flight_data
+   deactivate Controller
+   UI --> user: display_flight_details()
+   deactivate UI
+end
+
+@enduml
