@@ -177,7 +177,7 @@ def edit_profile(firstname: str="",lastname: str = "", birthday:str="",phone_num
         style="border: 2px solid var(--primary-color); border-radius: 10px; padding: 20px; margin: 10px;"
     )
     
-@rt("/password", methods=["GET", "POST"])
+@rt("/password")
 def get():
     return Container(
         COMMON_STYLES,
@@ -191,12 +191,17 @@ def get():
                 ),
                 Div(
                     Label("New Password", cls="form-label"),
-                    Input(name="new_password", type="password", cls="form-input", required=True),
+                    Input(name="new_password", type="password", cls="form-input", required=True,
+                          hx_post="/check-password", hx_trigger="input", hx_target="#password-message"),
+                    Div(id="password-message", style="color: red; font-size: 0.9em;"),
                     cls="form-group"
                 ),
                 Div(
                     Label("Confirm New Password", cls="form-label"),
-                    Input(name="confirm_new_password", type="password", cls="form-input", required=True),
+                    Input(name="confirm_new_password", type="password", cls="form-input", required=True,
+                          hx_post="/check-confirm-password", hx_trigger="input", hx_target="#confirm-password-message",
+                          hx_include="[name='new_password']"),  # ✅ Make sure HTMX sends "new_password"
+                    Div(id="confirm-password-message", style="color: red; font-size: 0.9em;"),
                     cls="form-group"
                 ),
                 Button("Change Password", type="submit", cls="btn btn-primary"),
@@ -210,29 +215,51 @@ def get():
             )
         )
     )
+    
+@rt("/check-confirm-password")
+def post(new_password: str = "", confirm_new_password: str = ""):
+    if not confirm_new_password:
+        return "Please confirm your password."
+    if new_password != confirm_new_password:
+        return "Passwords do not match."
+    return ""  # ✅ No error message if passwords match
 
-@rt("/passwordCheck", methods=["GET","POST"])
-def password_change(old_password: str = "", new_password: str = "", confirm_new_password: str = ""):
-    user = controller.get_logged_in_user()  # Get the logged-in user
+
+@rt("/check-password")
+def post(password: str = ""):  # ✅ Default value to prevent 400 errors
+    if not password:
+        return "Please enter a password."
+    if len(password) < 6:
+        return "Password must be at least 6 characters long."
+    if not re.search(r"[A-Z]", password):
+        return "Password must contain at least one uppercase letter."
+    if not re.search(r"[a-z]", password):
+        return "Password must contain at least one lowercase letter."
+    if not re.search(r"\d", password):
+        return "Password must contain at least one number."
+    if not re.search(r"[!@#$%^&*(),.?\"_:{}|<>]", password):
+        return "Password must contain at least one special character (!@#$%^&* etc.)."
+
+    return ""  # No message if password is valid
+@rt("/passwordCheck", methods=["POST"])
+def password_change(old_password: str, new_password: str, confirm_new_password: str):
+    user = controller.get_logged_in_user()
     if not user:
         return RedirectResponse('/login', status_code=303)
 
     result = user.change_password(old_password, new_password, confirm_new_password)
 
-    color = "green" if "successfully" in result else "red"
     if "successfully" in result:
         controller.logout()
-        return Container(H3(result, style=f"color: {color}; text-align: center;"),
-                    Form(Button("Go Back to login page", type="submit", style="font-size: 16px; background-color: #ccc; padding: 10px;",
-                    formaction="/logout")
-                    )
+        return Container(
+            H3(result, style="color: green; text-align: center;"),
+            Form(Button("Go Back to Login Page", type="submit", formaction="/logout"))
         )
-    else :
-        return Container(H3(result, style=f"color: {color}; text-align: center;"),
-                    Form(Button("Try again", type="submit", style="font-size: 16px; background-color: #ccc; padding: 10px;",
-                    formaction="/password")
-                    )
-        )
+
+    return Container(
+        H3(result, style="color: red; text-align: center;"),
+        Form(Button("Try Again", type="submit", formaction="/password"))
+    )
 
 # Logout
 @rt("/logout")

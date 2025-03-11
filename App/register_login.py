@@ -9,13 +9,19 @@ register_login_app = app
 def get():
     form = Form(
         Input(id="email", name="email", placeholder="Email", type="email", required=True),
-        Input(id="password", name="password", placeholder="Password", type="password", 
-            hx_post="/check-password", hx_trigger="input", hx_target="#password-message"),
-        Div(id="password-message", style="color: red; font-size: 0.9em;"),
-        Input(id="firstname", name="firstname", placeholder="First Name" ,required=True),
-        Input(id="lastname", name="lastname", placeholder="Last Name" ,required=True),
+        Input(id="password", name="password", placeholder="Password", type="password", required=True,
+              hx_post="/check-password", hx_trigger="input", hx_target="#password-message"),
+        Div(id="password-message", style="color: red; font-size: 0.9em;"),  # Live feedback
+        
+        Input(id="confirm-password", name="confirm_password", placeholder="Confirm Password", type="password", required=True,
+              hx_post="/check-confirm-password", hx_trigger="input", hx_target="#confirm-password-message"),
+        Div(id="confirm-password-message", style="color: red; font-size: 0.9em;"),  # Live confirm password check
+        
+        Input(id="firstname", name="firstname", placeholder="First Name", required=True),
+        Input(id="lastname", name="lastname", placeholder="Last Name", required=True),
         Button("Register"),
-        action="/register", method="post"
+        action="/register",
+        method="post"
     )
     return Titled("Register", form)
 
@@ -34,8 +40,14 @@ def post(password: str):
 
     return ""  # No message if password is valid
 
+@rt("/check-confirm-password")
+def post(password: str = "", confirm_password: str = ""):
+    if confirm_password and password != confirm_password:
+        return "Passwords do not match."
+    return ""  # No error message if passwords match
+
 @rt("/register")
-def post(email: str, password: str, firstname: str, lastname: str):
+def post(email: str, password: str, confirm_password: str, firstname: str, lastname: str):
     # Backend password validation (same rules as in /check-password)
     if len(password) < 6:
         return Container(
@@ -62,7 +74,11 @@ def post(email: str, password: str, firstname: str, lastname: str):
             P("Password must contain at least one special character (!@#$%^&* etc.).", style="color: red;"),
             Form(Button("Return to Register Page", type="submit", formaction="/register"))
         )
-
+    if password != confirm_password:
+        return Container(
+            P("Password not match", style="color: red;"),
+            Form(Button("Return to Register Page", type="submit", formaction="/register"))
+        )
     # If password passes validation, proceed with registration
     message = controller.register(email, password, firstname, lastname)
 
@@ -119,7 +135,7 @@ def post(email: str, password: str, firstname: str, lastname: str):
                         onmouseout="this.style.backgroundColor='#FFEB99'"),
                     formaction="/register",
                     style="max-width: 300px; margin: 0 auto;"
-                ),
+                ),  
                 cls="card"
             )
         )

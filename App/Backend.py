@@ -226,6 +226,14 @@ class Account:
             return "New password must be at least 6 characters long"
         if new_password == old_password:
             return "New password cannot be the same as the old password"
+        if not re.search(r"[A-Z]", new_password):
+            return "New password must contain at least one uppercase letter."
+        if not re.search(r"[a-z]", new_password):
+            return "New password must contain at least one lowercase letter."
+        if not re.search(r"\d", new_password):
+            return "New password must contain at least one number."
+        if not re.search(r"[!@#$%^&*(),.?\"_:{}|<>]", new_password):  
+            return "New password must contain at least one special character (!@#$%^&* etc.)."
 
         self.password = new_password
         return "Password changed successfully"
