@@ -199,33 +199,59 @@ class UserDetail:
         return Ul(*owned_code_list, id="owned-codes")
     
     def search_promo(self, code):
+        """Search for a promo code and return discount percentage if valid"""
         print(f"Searching for promo code: {code}")
-        print(f"Redeemed codes list: {self.redeemed_codes}")  # Debugging line
-
-        if code in self.redeemed_codes:
-            print(f"Promo code {code} found in redeemed codes")
-            return 10  # Assuming 10% discount for redeemed codes
-
-        for promocode in self.promocode_list:
-            print(f"Checking against: {promocode.code}")  # Debugging line
-            if code == promocode.code:
-                if promocode.is_expired():
-                    print(f"Promo code {promocode.code} is expired!")
+        
+        # First check if code is in user's promocode_list
+        if code in self.promocode_list:
+            promo = next((p for p in promotion_codes if p.code == code), None)
+            if promo:
+                print(f"Found promo code in user's list: {code} ({promo.discount_percent}% off)")
+                return promo.discount_percent
+        
+        # Check if code has already been redeemed
+        if any(promo.code == code for promo in self.redeemed_codes):
+            print(f"Promo code {code} already redeemed!")
+            return 0
+            
+        # Search in global promotion codes for new redemption
+        for promo in promotion_codes:
+            if promo.code == code:
+                # Check if expired
+                if promo.is_expired():
+                    print(f"Promo code {code} is expired!")
                     return 0
-                print(f"Promo code {promocode.code} found with {promocode.discount_percent}% off")
-                return promocode.discount_percent
-
-        print("Promo code not found")
+                    
+                # Check if user has enough points
+                if not promo.can_redeem(self.points):
+                    print(f"Not enough points to redeem {code}!")
+                    return 0
+                    
+                # Add to user's promocode list if valid
+                self.promocode_list.append(promo.code)
+                print(f"Valid promo code found: {code} ({promo.discount_percent}% off)")
+                return promo.discount_percent
+                
+        print(f"Promo code {code} not found")
         return 0
-    
+
     def use_promo(self, code):
-        for promocode in self.promocode_list:
-            if code == promocode.code:
-                print(f"Redeeming promo code: {promocode.code}")
-                self.promocode_list.remove(promocode)  # Remove from active promos
-                self.redeemed_codes.append(promocode)  # Add to redeemed list
-                return
-        print("Promo code not found or already used")
+        """Mark a promo code as used"""
+        for promo in promotion_codes:
+            if promo.code == code:
+                # Add to redeemed_codes if not already there
+                if promo not in self.redeemed_codes:
+                    self.redeemed_codes.append(promo)
+                
+                # Remove from promocode_list if it exists
+                if code in self.promocode_list:
+                    self.promocode_list.remove(code)
+                
+                print(f"Marked promo code {code} as used")
+                return True
+        
+        print(f"Promo code {code} not found in available codes")
+        return False
                         
 class Seat:
     def __init__(self, seat_id, seat_type, price):
