@@ -403,45 +403,157 @@ class Passenger:
 
 class Payment:
     def __init__(self, price):
-        self.price = price
-        self.method = None
-        self.status = "Pending"
+        self.__price = price
+        self.__method = None
+        self.__status = "Pending"
+    
+    @property
+    def price(self): return self.__price
+    
+    @property
+    def method(self): return self.__method
+    
+    @property
+    def status(self): return self.__status
+    
+    @method.setter
+    def method(self, value): self.__method = value
+    
+    @status.setter
+    def status(self, value): self.__status = value
+    
+    @price.setter
+    def price(self, value): self.__price = value
 
     def process_payment(self, method, card_number, cvv, exp):
+        print(f"Processing payment of ${self.price} with {method}")
+        
         if method == "CreditCard":
-            self.method = CreditCard(card_number, cvv, exp)
+            payment_method = CreditCard(card_number, cvv, exp)
         elif method == "DebitCard":
-            self.method = DebitCard(card_number, cvv, exp)
-        self.status = "Completed"
-        return True
+            payment_method = DebitCard(card_number, cvv, exp)
+        else:
+            print(f"Unsupported payment method: {method}")
+            return False
+        
+        # Store the payment method
+        self.method = payment_method
+        
+        # Process the payment using the appropriate method
+        success, final_amount = payment_method.process_payment(self.price)
+        
+        if success:
+            self.status = "Completed"
+            print(f"Payment completed successfully. Final amount: ${final_amount:.2f}")
+            return True
+        else:
+            self.status = "Failed"
+            print(f"Payment failed: {final_amount}")  # In case of failure, final_amount contains error message
+            return False
         
     def refund(self, amount=None):
         if not self.method:
+            print("Cannot process refund: No payment method associated with this payment")
             return False
             
-        refund_amount = amount or self.price
-        print(f"Refunding {refund_amount} to {self.method.method_id} ending with {self.method.card_number[-4:]}")
+        if self.status != "Completed":
+            print(f"Cannot process refund: Payment status is {self.status}")
+            return False
+            
+        refund_amount = amount if amount is not None else self.price
+        print(f"Processing refund of ${refund_amount:.2f}")
+        
         self.status = "Refunded"
+        return True
+    
+    def discount_payment(self, discount_percent):
+        """Apply a discount to the payment price"""
+        if discount_percent <= 0 or discount_percent >= 100:
+            print(f"Invalid discount percentage: {discount_percent}%")
+            return False
+            
+        original_price = self.price
+        discounted_price = original_price * (1 - discount_percent / 100)
+        self.price = discounted_price
+        
+        print(f"Applied {discount_percent}% discount: ${original_price} → ${discounted_price:.2f}")
         return True
 
 class PaymentMethod:
     def __init__(self, method_id):
-        self.method_id = method_id
-       
+        self.__method_id = method_id
+    
+    @property
+    def method_id(self): return self.__method_id
+    
+    @method_id.setter
+    def method_id(self, value): self.__method_id = value
+    
+    def process_payment(self):
+        # Abstract method to be implemented by subclasses
+        raise NotImplementedError("Subclasses must implement process_payment()")
+
 class ATMCard(PaymentMethod):
     def __init__(self, method_id, card_number, card_CVV, card_EXP):
         super().__init__(method_id)
-        self.card_number = card_number
-        self.card_CVV = card_CVV
-        self.card_EXP = card_EXP
+        self.__card_number = card_number
+        self.__card_CVV = card_CVV
+        self.__card_EXP = card_EXP
+    
+    @property
+    def card_number(self): return self.__card_number
+    @property
+    def card_CVV(self): return self.__card_CVV
+    @property
+    def card_EXP(self): return self.__card_EXP
+    
+    def validate_card(self):
+        # Basic validation - check if card number is 16 digits and CVV is 3 digits
+        is_valid_number = len(str(self.card_number).replace(" ", "")) == 16
+        is_valid_cvv = len(str(self.card_CVV)) == 3
+        
+        # Check if card is not expired
+        current_date = datetime.now().strftime("%m/%y")
+        is_not_expired = self.card_EXP >= current_date
+        
+        return is_valid_number and is_valid_cvv and is_not_expired
 
 class CreditCard(ATMCard):
     def __init__(self, card_number, card_CVV, card_EXP, method_id="CreditCard"):
         super().__init__(method_id, card_number, card_CVV, card_EXP)
+    
+    def process_payment(self, amount):
+        # First validate the card
+        if not self.validate_card():
+            return False, "Invalid card details"
+        
+        # No interest for credit card
+        print(f"Processing credit card payment: ${amount:.2f}")
+        
+        return True, amount
 
 class DebitCard(ATMCard):
     def __init__(self, card_number, card_CVV, card_EXP, method_id="DebitCard"):
         super().__init__(method_id, card_number, card_CVV, card_EXP)
+        self.__fee = 0.07  # 7% fee
+    
+    @property
+    def fee(self): return self.__fee
+    
+    def calculate_fee(self, amount):
+        return amount * self.fee
+    
+    def process_payment(self, amount):
+        # First validate the card
+        if not self.validate_card():
+            return False, "Invalid card details"
+        
+        # Calculate fee
+        fee_amount = self.calculate_fee(amount)
+        final_amount = amount + fee_amount
+        print(f"Processing debit card payment: ${amount} + ${fee_amount:.2f} fee (7%) = ${final_amount:.2f}")
+        
+        return True, final_amount
 
 class Booking:
     bookings = []  # Class variable to store all bookings
