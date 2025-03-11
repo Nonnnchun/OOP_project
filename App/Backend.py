@@ -92,7 +92,7 @@ class UserDetail:
         self.__address = []
         self.__promocode_list = []
         self.__booking_list = []
-        self.__redeemed_codes = {}          
+        self.__redeemed_codes = []          
 
     @property
     def firstname(self): return self.__firstname
@@ -167,13 +167,26 @@ class UserDetail:
         if gender: self.gender = gender
         if nationality: self.nationality = nationality
 
-    def redeem_promocode(self, promo: Promocode):
-        """พยายามแลกโค้ด"""
-        if promo.can_redeem(self.points):
-            self.points -= promo.points  # Deduct points via setter
-            self.promocode_list.append(promo.code)
-            self.__redeemed_codes[promo.code] = promo  
+    def redeem_promocode(self, promo):
+        """Redeem a promo code"""
+        # Check if already redeemed
+        if promo in self.redeemed_codes:
+            print(f"Promo code {promo.code} already redeemed!")
             return True
+            
+        # Check if user can redeem (has enough points)
+        if promo.points == 0 or promo.can_redeem(self.points):
+            if promo.points > 0:
+                self.points -= promo.points  # Deduct points via setter
+            
+            self.promocode_list.append(promo.code)
+            self.redeemed_codes.append(promo)
+            print(f"Promo code {promo.code} redeemed successfully!")
+            print(f"Updated redeemed codes: {[code.code for code in self.redeemed_codes]}")
+            return True
+        
+        print(f"Not enough points to redeem promo code {promo.code}")
+        print(f"Updated redeemed codes list: {self.redeemed_codes}")
         return False
 
     def get_owned_codes(self, promotion_codes):
@@ -184,7 +197,36 @@ class UserDetail:
             for code in self.promocode_list
         ]
         return Ul(*owned_code_list, id="owned-codes")
-            
+    
+    def search_promo(self, code):
+        print(f"Searching for promo code: {code}")
+        print(f"Redeemed codes list: {self.redeemed_codes}")  # Debugging line
+
+        if code in self.redeemed_codes:
+            print(f"Promo code {code} found in redeemed codes")
+            return 10  # Assuming 10% discount for redeemed codes
+
+        for promocode in self.promocode_list:
+            print(f"Checking against: {promocode.code}")  # Debugging line
+            if code == promocode.code:
+                if promocode.is_expired():
+                    print(f"Promo code {promocode.code} is expired!")
+                    return 0
+                print(f"Promo code {promocode.code} found with {promocode.discount_percent}% off")
+                return promocode.discount_percent
+
+        print("Promo code not found")
+        return 0
+    
+    def use_promo(self, code):
+        for promocode in self.promocode_list:
+            if code == promocode.code:
+                print(f"Redeeming promo code: {promocode.code}")
+                self.promocode_list.remove(promocode)  # Remove from active promos
+                self.redeemed_codes.append(promocode)  # Add to redeemed list
+                return
+        print("Promo code not found or already used")
+                        
 class Seat:
     def __init__(self, seat_id, seat_type, price):
         self.__seat_id = seat_id
@@ -571,6 +613,8 @@ class Payment:
     def method(self, value): self.__method = value
     @status.setter
     def status(self, value): self.__status = value
+    @price.setter
+    def price(self, value): self.__price = value
     
 
     def process_payment(self, method, card_number, cvv, exp):
@@ -589,6 +633,14 @@ class Payment:
         print(f"Refunding {refund_amount} to {self.method.method_id} ending with {self.method.card_number[-4:]}")
         self.status = "Refunded"
         return True
+    def discount_payment(self, discount_percent):
+        if discount_percent is None:
+            discount_percent = 0
+        
+        discount = (100 - discount_percent) / 100
+        discounted_price = self.price * discount  # Compute before updating
+        print(f"Applying {discount_percent}% discount: {self.price} -> {discounted_price}")
+        self.price = discounted_price
 
 class PaymentMethod:
     def __init__(self, method_id):

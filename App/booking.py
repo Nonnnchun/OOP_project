@@ -18,68 +18,60 @@ YELLOW_BORDER = "#FFB300"  # Border color
 async def booking_summary(request):
     form_data = await request.form()
     booking_ref = form_data.get("booking_ref", "").strip()
-    
+
     booking = next((b for b in controller.bookings if b.booking_reference == booking_ref), None)
     if not booking:
         return Title("Error"), H1("Booking not found")
-    
+
     flight = controller.get_flight_by_id(booking.flight.flight_id)
     if not flight:
         return Title("Error"), H1("Flight not found")
-    
+
     if not hasattr(booking, 'passengers') or not booking.passengers:
-        passenger_data = []
         person_count = int(form_data.get("person_count", "1"))
-        
+        passenger_data = []
+
         for i in range(person_count):
-            first_name = form_data.get(f"first_name_{i}", "")
-            last_name = form_data.get(f"last_name_{i}", "")
-            phone = form_data.get(f"phone_{i}", "")
-            dob = form_data.get(f"dob_{i}", "")
-            
             passenger = Passenger(
-                firstname=first_name,
-                lastname=last_name,
-                phone=phone,
-                dob=dob,
+                firstname=form_data.get(f"first_name_{i}", ""),
+                lastname=form_data.get(f"last_name_{i}", ""),
+                phone=form_data.get(f"phone_{i}", ""),
+                dob=form_data.get(f"dob_{i}", "")
             )           
             passenger_data.append(passenger)
-        
+
         booking.passengers = passenger_data
-        
+
         seat_ids = form_data.getlist("seat_ids") if hasattr(form_data, "getlist") else form_data.get("seat_ids", [])
         if not isinstance(seat_ids, list):
             seat_ids = [seat_ids]
-            
+
         booking.passenger_seats = {}
         for i, passenger in enumerate(booking.passengers):
             if i < len(seat_ids):
                 booking.passenger_seats[passenger.id] = seat_ids[i]
                 booking.add_seat(seat_ids[i])
-    
-    passenger_items = []
-    seat_prices = {"Economy": 500, "Business": 1200, "First Class": 2500}
+
     total_seat_price = 0
-    
-    seat_details = []
+    passenger_items = []
+
     for passenger in booking.passengers:
         seat_id = booking.passenger_seats.get(passenger.id, 'Not assigned')
         seat_class = "Economy"
+        seat_price = 0
 
         if seat_id != 'Not assigned':
-            seat = next((s for s in flight.plane.seats if s.seat_id == seat_id), None)
-            if seat and hasattr(seat, 'seat_type'):
+            seat = next((s for s in flight.outbound_seats if s.seat_id == seat_id), None)
+
+            if not seat:
+                seat = next((s for s in flight.plane.seats if s.seat_id == seat_id), None)
+
+            if seat:
                 seat_class = seat.seat_type
-        
-        seat_price = seat_prices.get(seat_class, 500)
+                seat_price = seat.price
+
         total_seat_price += seat_price
-        
-        seat_details.append({
-            "id": seat_id,
-            "class": seat_class,
-            "price": seat_price
-        })
-        
+
         passenger_items.append(
             Div(
                 P(f"Name: {passenger.firstname} {passenger.lastname}"),
@@ -88,12 +80,33 @@ async def booking_summary(request):
                 cls="passenger-item"
             )
         )
-    
-    luggage_weight_price = form_data.get("luggage_weight_price", "").strip()
 
-    total_price = total_seat_price + float(luggage_weight_price)
-    
+    luggage_weight_price = float(form_data.get("luggage_weight_price", "0"))
+    total_price = total_seat_price + luggage_weight_price
+
     booking.create_payment(total_price)
+
+    # Handle Promo Code
+    code = form_data.get("code", "").strip().upper()  # Normalize case
+    print(f"🔍 Checking Promo Code: '{code}'")
+
+    user = controller.get_logged_in_user()
+    discount_percent = user.userdetail.search_promo(code)
+
+    # Ensure booking.payment exists before trying to use it
+    if booking.payment:
+        original_price = booking.payment.price  # Store the original price before discount
+        if discount_percent > 0:
+            booking.payment.discount_payment(discount_percent)
+            discounted_price = booking.payment.price
+            user.userdetail.use_promo(code)
+            print(f"✅ Promo applied: {discount_percent}% off | {original_price} -> {discounted_price}")
+        else:
+            discounted_price = original_price  # If no discount, keep original price
+            print("⚠️ No valid promo code applied")
+    else:
+        print("❌ Error: Booking payment not initialized!")
+        discounted_price = total_price  # No payment object, so no discount applied
 
     return Title("Booking Summary"), Div(
         Div(
@@ -101,9 +114,9 @@ async def booking_summary(request):
             P("Please review your booking details before confirming"),
             cls="header",
         ),
-        
+
         Div(f"Booking Reference: {booking_ref}", cls="booking-ref"),
-        
+
         Div(
             H2("Flight Details"),
             Div(
@@ -115,13 +128,13 @@ async def booking_summary(request):
             ),
             cls="section"
         ),
-        
+
         Div(
             H2("Passengers"),
             Div(*passenger_items, cls="passenger-list"),
             cls="section",
         ),
-        
+
         Div(
             H2("Luggage Information"),
             Div(
@@ -131,30 +144,34 @@ async def booking_summary(request):
             ),
             cls="section"
         ),
-        
+
         Div(
             H2("Price Summary"),
-            Div(
-                Div(
-                    Div("Seat Prices:", cls="price-label"),
-                    Div(f"${total_seat_price}", cls="price-value"),
-                    cls="price-row"
-                ),
-                Div(
-                    Div("Luggage Fee:", cls="price-label"),
-                    Div(f"${luggage_weight_price}", cls="price-value"),
-                    cls="price-row"
-                ),
-                Div(
-                    Div("Total Price:", cls="price-label"),
-                    Div(f"${total_price}", cls="price-value"),
-                    cls="total-price price-row"
-                ),
-                cls="price-summary"
-            ),
-            cls="section"
+            P(f"Seat Prices: ${total_seat_price}"),
+            P(f"Luggage Fee: ${luggage_weight_price}"),
+            P(f"Total Price: ${original_price}"),
+            P(f"Price After Use Promocode: ${discounted_price}"),  
+            cls="price-summary"
         ),
-        
+
+        Div(
+            H2("Promocode"),
+            Form(
+                Div(
+                    Label("Have a promocode?", for_="promocode-input"),
+                    Input(id="code", type="text", name="code", placeholder="Enter promocode"),
+                    Button("Apply", type="submit", cls="apply-btn"),
+                    cls="promocode-form"
+                ),
+                Input(type="hidden", name="booking_ref", value=booking_ref),
+                Input(type="hidden", name="luggage_weight_price", value=str(luggage_weight_price)),
+                *[Input(type="hidden", name=k, value=v) for k, v in form_data.items() if k != "code" and k != "booking_ref" and k != "luggage_weight_price"],
+                action="/booking_summary",
+                method="post"
+            ),
+            cls="section promocode-section"
+        ),
+
         Div(
             Form(
                 Button("Back", type="button", cls="back-btn", onclick="history.back()"),
@@ -168,6 +185,7 @@ async def booking_summary(request):
         ),
         cls="container"
     )
+    
 @rt("/manage-booking")
 def manage_booking():
     """Main page showing all bookings with edit and cancel options"""
