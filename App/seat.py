@@ -194,71 +194,32 @@ async def confirm_seat(request):
         form_data = await request.form()
         booking_ref = form_data.get("booking_ref", "")
         seat_id = form_data.get("seat_id", "")
-        
-        # Get passenger details from form
-        title = form_data.get("title", "")
-        firstname = form_data.get("firstname", "")
-        lastname = form_data.get("lastname", "")
-        email = form_data.get("email", "")
-        phone = form_data.get("phone", "")
-        
-        # Debug output
-        print(f"DEBUG: Confirming seat - booking_ref={booking_ref}, seat_id={seat_id}")
-        print(f"DEBUG: Passenger details - {title} {firstname} {lastname}, {email}, {phone}")
-        
-        # Validate required fields
-        if not all([booking_ref, seat_id, title, firstname, lastname, email, phone]):
-            return Title("Error"), H1("Missing required fields"), P("Please go back and complete all fields.")
-        
+
         # Get the booking
         booking = next((b for b in controller.bookings if b.booking_reference == booking_ref), None)
         if not booking:
             return Title("Error"), H1("Booking not found")
-        
+
         # Get the flight
         flight = controller.get_flight_by_id(booking.flight.flight_id)
         if not flight:
             return Title("Error"), H1("Flight not found")
-        
+
         # Find the seat
         seat = next((s for s in flight.plane.seats if s.seat_id == seat_id), None)
         if not seat:
             return Title("Error"), H1("Seat not found")
-        
-        # Create passenger dictionary
-        passenger = {
-            "title": title,
-            "firstname": firstname,
-            "lastname": lastname,
-            "email": email,
-            "phone": phone
-        }
-        
-        # Save passenger in different ways to ensure it's stored
-        # Method 1: Set as an attribute directly on the seat
-        seat.passenger = passenger
-        
-        # Method 2: Store in a passengers dictionary if it exists on the booking
-        if not hasattr(booking, "passengers"):
-            booking.passengers = {}
-        booking.passengers[seat_id] = passenger
-        
-        # Method 3: Mark the seat with the booking reference
-        seat.booking_ref = booking_ref
-        
-        # Debug to confirm we saved the passenger
-        print(f"DEBUG: Saved passenger {firstname} {lastname} to seat {seat_id}")
-        print(f"DEBUG: Seat now has passenger: {hasattr(seat, 'passenger')}")
-        if hasattr(seat, 'passenger'):
-            print(f"DEBUG: Seat passenger data: {seat.passenger}")
-        
-        # Redirect back to passenger_details page
-        from starlette.responses import RedirectResponse
-        return RedirectResponse(
-            url=f"/passenger_details?booking_ref={booking_ref}",
-            status_code=303
-        )
-        
+
+        # 🚨 Double-check if the seat is already booked
+        if not seat.is_available():
+            return Title("Error"), H1(f"Seat {seat_id} is already booked! Please choose another seat.")
+
+        # ✅ Proceed with booking
+        if not booking.add_seat(seat_id):
+            return Title("Error"), H1(f"Seat {seat_id} is already booked!")
+
+        return RedirectResponse(f"/passenger_details?booking_ref={booking_ref}", status_code=303)
+
     except Exception as e:
-        print(f"Error processing seat confirmation: {e}")
+        print(f"❌ Error processing seat confirmation: {e}")
         return Title("Error"), H1("An error occurred"), P(str(e))

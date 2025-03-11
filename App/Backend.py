@@ -205,8 +205,8 @@ class Seat:
     def seat_status(self, available): self.__seat_status = available
     
     def update_seat_status(self, available=False):
-        self.seat_status = available
-        print(f"Seat {self.seat_id} status updated to: {'Available' if available else 'Unavailable'}")
+        self.__seat_status = available
+        print(f"✅ Seat {self.seat_id} status updated: {'Available' if available else 'Booked'}")
       
     def is_available(self):
         return self.seat_status
@@ -731,23 +731,30 @@ class Booking:
         return True
         
     def add_seat(self, seat_id):
-        # First check if the seat is already booked on this specific flight
+    # ✅ Check if the seat is already booked in any existing booking
         for booking in Booking.bookings:
             if (booking != self and 
                 booking.flight.flight_id == self.flight.flight_id and 
                 booking.outbound_seat and 
                 booking.outbound_seat.seat_id == seat_id and
                 booking.status != "Cancelled"):
-                print(f"Seat {seat_id} is already booked on this flight")
-                return False
-                
-        # If not already booked, proceed with booking
-        for seat in self.flight.outbound_seats:
-            if seat.seat_id == seat_id and seat.is_available():
+                print(f"🚨 Seat {seat_id} is already booked on this flight!")
+                return False  # Prevent double booking
+
+    # ✅ Check if the seat is available in the flight's seats list
+        for seat in self.flight.plane.seats:
+            if seat.seat_id == seat_id:
+                if not seat.is_available():
+                    print(f"❌ Seat {seat_id} is already taken!")
+                    return False  # Seat is already occupied
+            
+            # ✅ Mark the seat as booked
                 self.outbound_seat = seat
                 seat.update_seat_status(False)  # Mark as unavailable
-                print(f"Added outbound seat: {seat_id}")
+                print(f"✅ Seat {seat_id} successfully booked!")
                 return True
+        
+        print(f"❌ Seat {seat_id} not found on this flight.")
         return False
     
     def add_return_seat(self, seat_id):
