@@ -1,0 +1,45 @@
+@startuml SelectSeat
+actor "User" as user
+participant UI
+participant Controller
+participant Booking
+participant Seat
+
+== Select Seat ==
+
+loop
+    user -> UI: open_seat_map()
+    activate UI
+    UI -> Controller: view_seat_map()
+    activate Controller
+    Controller -> Booking: get_available_seats()
+    activate Booking 
+    Booking -> Seat: is_available()
+    activate Seat 
+    Seat --> Booking: return available_seats[]
+    deactivate Seat
+    Booking --> Controller: return available_seats[]
+    deactivate Booking
+    Controller --> UI: return seat_map_data
+    deactivate Controller
+    UI --> user: display_available_seats()
+    
+    user -> UI: click_seat(seat_id)
+    activate UI
+    UI -> Controller: select_seat(seat_id)
+    activate Controller
+    Controller -> Booking: add_seat(seat_id)
+    activate Booking 
+    Booking -> Seat: update_seat_status(false)
+    activate Seat 
+    Seat --> Booking: return seat_reserved
+    deactivate Seat
+    Booking --> Controller: return seat_confirmed
+    deactivate Booking
+    Controller --> UI: return seat_status
+    deactivate Controller
+    UI --> user: display_seat_confirmation()
+    deactivate UI
+end
+
+@enduml
