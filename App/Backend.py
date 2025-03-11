@@ -650,7 +650,7 @@ class PaymentMethod:
     def method_id(self): return self.__method_id
     @method_id.setter
     def method_id(self, value): self.__method_id = value
-
+       
 class ATMCard(PaymentMethod):
     def __init__(self, method_id, card_number, card_CVV, card_EXP):
         super().__init__(method_id)
