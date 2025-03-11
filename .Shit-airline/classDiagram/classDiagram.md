@@ -220,7 +220,6 @@ classDiagram
         -firstname
         -lastname
         -phone
-        -dob
     }
 
     %% Relationships
