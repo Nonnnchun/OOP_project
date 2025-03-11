@@ -99,7 +99,8 @@ classDiagram
 
     %% LuggagePricingSystem Class
     class LuggagePricingSystem {
-        +calculate_luggage_price(luggage)
+        <<Abstract>>
+        +calculate_luggage_price(luggage)*
     }
 
     %% StandardPricing Class
@@ -157,7 +158,9 @@ classDiagram
     
     %% PaymentMethod Class
     class PaymentMethod {
+        <<Abstract>>
         -method_id
+        +process_payment()*
     }
 
     %% ATMCard Class
@@ -165,6 +168,19 @@ classDiagram
         -card_number
         -card_CVV
         -card_EXP
+        +validate_card()
+    }
+
+    %% CreditCard Class
+    class CreditCard {
+        +process_payment()
+    }
+
+    %% DebitCard Class
+    class DebitCard {
+        -fee: 7%
+        +calculate_fee()
+        +process_payment()
     }
 
     %% Promocode Class
