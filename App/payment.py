@@ -283,7 +283,7 @@ async def payment_confirmation(request):
     
     user.userdetail.used_code(code)
     booking.update_booking_status()
-    user.update_booking_history(code)
+    user.update_booking_history(booking)
     booking.payment.process_payment(card_type, card_number, cvv, exp)
     
     styles = Style("""

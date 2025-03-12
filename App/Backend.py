@@ -758,7 +758,8 @@ class Booking:
     def return_flight_date(self): return self.__return_flight_date
     @property
     def return_arrival_time(self): return self.__return_arrival_time
-    
+
+
     @luggage.setter
     def luggage(self, value): self.__luggage = value
     @luggage_weight.setter
@@ -1145,7 +1146,7 @@ class Controller:
         return flight
 
     def get_flight(self, flight_id):
-        return next((flight for flight in self.flights if flight.id == flight_id), None)
+        return next((flight for flight in self.flights if flight.flight_id == flight_id), None)
 
     def update_flight(self, updated_flight):
         for i, flight in enumerate(self.flights):
