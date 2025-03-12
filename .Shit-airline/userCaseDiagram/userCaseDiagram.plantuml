@@ -1,0 +1,44 @@
+@startuml userCaseDiagram
+
+left to right direction
+actor "User" as user
+rectangle "Airline System" {
+   usecase "Welcome" as welcome
+   usecase "Search Flight" as search
+   usecase "Manage Booking" as managebooking
+   usecase "Use Promocode" as promocode
+   usecase "Process Payment" as payment
+   usecase "Login" as login
+   usecase "Register" as register
+   usecase "Select Seat" as selectseat
+   usecase "Add Luggage" as addluggage
+   usecase "Select Flight" as selectflight
+   usecase "Enter Passenger Info" as passengerinfo
+   usecase "View Home" as home
+   usecase "Change Password" as changepassword
+   usecase "Edit Profile" as editprofile
+   usecase "Use Points" as usepoints
+   usecase "Cancel Booking" as cancelbooking
+   usecase "Edit Booking" as editbooking
+   usecase "Logout" as logout
+}
+
+user -- welcome
+register -up-> welcome: extend
+register --> login: include
+login --> home: include
+search -up-> home: extend
+selectflight -up-> search: extend
+selectseat -up-> selectflight: extend
+addluggage -up-> selectseat: extend
+passengerinfo -up-> addluggage: extend
+payment -up-> passengerinfo: extend
+managebooking -up-> home: extend
+editbooking -up-> managebooking: extend
+cancelbooking -up-> managebooking: extend
+promocode -up-> home: extend
+usepoints -up-> promocode: extend
+changepassword -up-> home: extend
+editprofile -up-> home: extend
+logout -up-> home: extend
+@enduml

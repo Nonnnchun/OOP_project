@@ -1,0 +1,30 @@
+@startuml AddLuggage
+actor "User" as user
+participant UI
+participant Booking
+participant Luggage
+participant StandardPricing
+
+== Add Luggage ==
+
+loop
+    user -> UI: select_weight_option()
+    activate UI
+    UI -> Booking: select_luggage_weight()
+    activate Booking
+    Booking -> Luggage: add_luggage()
+    activate Luggage
+    Luggage -> Luggage: calculate_price()
+    Luggage --> Booking: return luggage_details
+    deactivate Luggage
+    Booking -> StandardPricing: calculate_luggage_price(luggage)
+    activate StandardPricing
+    StandardPricing --> Booking: return final_price
+    deactivate StandardPricing
+    Booking --> UI: return luggage_info
+    deactivate Booking
+    UI --> user: display_luggage_details()
+    deactivate UI
+end
+
+@enduml
