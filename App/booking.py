@@ -74,7 +74,7 @@ async def booking_summary(request):
             Div(
                 P(f"Name: {passenger.firstname} {passenger.lastname}"),
                 P(f"Contact: {passenger.phone}"),
-                P(f"Seat: {seat_id} ({seat_class}) - ฿{seat_price}"),
+                P(f"Seat: {seat_id} ({seat_class}) - ${seat_price}"),
                 cls="passenger-item"
             )
         )
@@ -150,7 +150,7 @@ async def booking_summary(request):
             H2("Luggage Information"),
             Div(
                 P(f"Total Luggage Weight: {booking.luggage.kilogram} kg"),
-                P(f"Luggage Fee: ฿{luggage_weight_price}"),
+                P(f"Luggage Fee: ${luggage_weight_price}"),
                 cls="luggage-details",
             ),
             cls="section"
@@ -158,10 +158,10 @@ async def booking_summary(request):
 
         Div(
             H2("Price Summary"),
-            P(f"Seat Prices: ฿{total_seat_price}"),
-            P(f"Luggage Fee: ฿{luggage_weight_price}"),
-            P(f"Total Price: ฿{original_price}"),
-            P(f"Price After Use Promocode: ฿{discounted_price}"),  
+            P(f"Seat Prices: ${total_seat_price}"),
+            P(f"Luggage Fee: ${luggage_weight_price}"),
+            P(f"Total Price: ${original_price}"),
+            P(f"Price After Use Promocode: ${discounted_price}"),  
             cls="price-summary"
         ),
 
@@ -240,12 +240,12 @@ async def edit_booking_page(ref: str, flight_date: str = "", confirm: bool = Fal
                 if old_seat_id:
                     old_seat = next((s for s in booking.flight.plane.seats if s.seat_id == old_seat_id), None)
                     if old_seat:
-                        old_seat.is_available = True
+                        old_seat.update_seat_status(True)
                 
                 # Assign new seat
                 new_seat = next((s for s in booking.flight.plane.seats if s.seat_id == new_seat_id), None)
                 if new_seat:
-                    new_seat.is_available = False
+                    new_seat.update_seat_status(False)
                     booking.passenger_seats[passenger_id] = new_seat_id
 
         return get_booking_table(), Script("window.location.reload();")
@@ -262,30 +262,41 @@ async def edit_booking_page(ref: str, flight_date: str = "", confirm: bool = Fal
         for passenger in booking.passengers:
             current_seat_id = booking.passenger_seats.get(passenger.id, "")
             
-            # Get available seats plus current seat
-            available_seats = [seat for seat in booking.flight.plane.seats 
-                             if seat.is_available or seat.seat_id == current_seat_id]
+            # Get the current seat to determine its class
+            current_seat = next((seat for seat in booking.flight.plane.seats 
+                               if seat.seat_id == current_seat_id), None)
             
-            seat_options = [
-                Option(
-                    f"{seat.seat_id} ({seat.seat_type})", 
-                    value=seat.seat_id,
-                    selected=(seat.seat_id == current_seat_id)
-                ) for seat in available_seats
-            ]
-            
-            passenger_seat_forms.append(
-                Div(
-                    H4(f"Seat for {passenger.firstname} {passenger.lastname}", 
-                       style="color: #ffee63; margin-bottom: 10px;"),
-                    Select(
-                        name=f"passenger_seat_{passenger.id}",
-                        *seat_options,
-                        style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;"
-                    ),
-                    style="background-color: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px;"
+            if current_seat:
+                # Only show seats of the same class as the current seat
+                seat_type = current_seat.seat_type
+                
+                # Get available seats of the same class plus current seat
+                available_seats = [seat for seat in booking.flight.plane.seats 
+                                 if (seat.is_available() or seat.seat_id == current_seat_id)
+                                 and seat.seat_type == seat_type]
+                
+                seat_options = [
+                    Option(
+                        f"{seat.seat_id} ({seat.seat_type})", 
+                        value=seat.seat_id,
+                        selected=(seat.seat_id == current_seat_id)
+                    ) for seat in available_seats
+                ]
+                
+                passenger_seat_forms.append(
+                    Div(
+                        H4(f"Seat for {passenger.firstname} {passenger.lastname}", 
+                           style="color: #ffee63; margin-bottom: 10px;"),
+                        P(f"Current seat class: {seat_type}", 
+                          style="color: #fff; margin-bottom: 10px;"),
+                        Select(
+                            name=f"passenger_seat_{passenger.id}",
+                            *seat_options,
+                            style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;"
+                        ),
+                        style="background-color: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px;"
+                    )
                 )
-            )
 
     return Card(
         H3(f"Edit Booking {ref}", style="color: #ffee63; text-align: center; margin-bottom: 20px;"),
@@ -435,6 +446,17 @@ def cancel_booking(ref: str):
     """Cancel a booking"""
     booking = next((b for b in Booking.bookings if b.booking_reference == ref), None)
     if booking:
+        # Explicitly release all seats before cancelling
+        if hasattr(booking, 'passenger_seats') and booking.passenger_seats:
+            for passenger_id, seat_id in booking.passenger_seats.items():
+                # Find the seat in the flight's plane seats
+                seat = next((s for s in booking.flight.plane.seats if s.seat_id == seat_id), None)
+                if seat:
+                    # Mark the seat as available
+                    seat.update_seat_status(True)
+                    print(f"Released seat {seat_id} for booking {ref}")
+        
+        # Now cancel the booking
         booking.cancel()
         return get_booking_table(), Script("window.location.reload();")
     return RedirectResponse("/manage-booking?error=Booking+not+found")
