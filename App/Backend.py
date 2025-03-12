@@ -332,7 +332,14 @@ class Account:
         if not re.search(r"[!@#$%^&*(),.?\"_:{}|<>]", new_password):  
             return "New password must contain at least one special character (!@#$%^&* etc.)."
 
+    # 🔥 Make sure the password is actually updating
+        print(f"Before update: {self.password}")
         self.password = new_password
+        print(f"After update: {self.password}")
+
+    # ✅ If using a database, make sure to save it:
+    # database.update_user_password(self.email, self.password)
+
         return "Password changed successfully"
 
 class Plane:

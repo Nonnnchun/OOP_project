@@ -150,7 +150,6 @@ def get():
             Div(
                 Div(
                     H1(f"Welcome, {user.userdetail.firstname} {user.userdetail.lastname}", cls="welcome-header"),
-                    P(Span("Total points: ", cls=""), Span(f"{user.userdetail.points}", cls="points-value"), cls="points-display"),
                     cls="welcome-card"
                 ),
                 
