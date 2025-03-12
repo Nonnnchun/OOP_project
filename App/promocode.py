@@ -8,13 +8,10 @@ promocode_app = app
 @rt("/promocode")
 def get():
     """หน้าแสดงโปรโมชั่น & แต้มของผู้ใช้"""
-
     user = controller.get_logged_in_user()
-    user_account = user.userdetail
 
-    print(f"{user_account.promocode_list}")
-    print(f"{user_account.redeemed_codes}")
-
+    if not user:
+            return RedirectResponse('/login', status_code=303)
     return Title("Promotion Codes"), Container(
         Button("Back to Home", 
                hx_get="/home", 
