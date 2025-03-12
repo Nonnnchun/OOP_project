@@ -1,0 +1,51 @@
+@startuml Welcome
+
+actor "User" as user
+participant UI
+participant Controller
+participant Account
+
+== Welcome Page ==
+
+   user -> UI: access_website()
+   activate UI
+   UI -> Controller: visit_welcome_page()
+   activate Controller 
+   alt Login
+      user -> UI: submit_login_form()
+      UI -> Controller: login(email, password)
+      activate Account 
+      Controller -> Account: check_password()
+      Account --> Controller: return login_success
+      Controller --> UI: return login_status
+      UI --> user: display_login_success()
+      deactivate Account
+   else Register
+      user -> UI: submit_register_form()
+      UI -> Controller: register(email, password, firstname, lastname)
+      activate Account 
+      Controller -> Account: validate_registration()
+      Account --> Controller: return register_success
+      Controller --> UI: return register_status
+      UI --> user: display_register_success()
+      user -> UI: auto_login()
+      UI -> Controller: login(email, password)
+      Controller -> Account: check_password()
+      Account --> Controller: return login_success
+      Controller --> UI: return login_status
+      UI --> user: display_login_success()
+      deactivate Account
+   end
+
+   Controller -> Controller: validate_login()
+   Controller -> Account: get_user_details()
+   activate Account 
+   Account -> Account: prepare_home_page()
+   Account --> Controller: return home_page_data
+   deactivate Account
+   Controller --> UI: return home_page_data
+   deactivate Controller
+   UI --> user: display_home_page()
+   deactivate UI
+
+@enduml

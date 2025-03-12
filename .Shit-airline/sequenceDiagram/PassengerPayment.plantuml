@@ -1,0 +1,110 @@
+@startuml PassengerPayment
+
+actor "User" as user
+participant UI
+participant Controller
+participant Account
+participant Booking
+participant Passenger
+participant Seat
+participant Payment
+participant DebitCard
+participant CreditCard
+participant ATMCard
+
+== Enter Passenger Info ==
+
+user -> UI: click_next_button()
+activate UI 
+
+UI -> Controller: submit_passenger_form()
+activate Controller 
+loop
+Controller -> Booking: add_passenger()
+activate Booking 
+Booking -> Controller: return success
+deactivate Booking
+end
+Controller -> UI: return success
+deactivate Controller
+UI -> user: display_payment_page()
+deactivate UI
+
+
+== Process Payment ==
+
+user -> UI: click_payment_button()
+activate UI 
+
+UI -> Controller: submit_payment_form()
+activate Controller 
+
+Controller -> Booking: get_booking_by_ref()
+activate Booking 
+Booking --> Controller: return booking
+deactivate Booking
+
+Controller -> Payment: process_payment()
+activate Payment 
+
+alt Pay with DebitCard
+    Payment -> DebitCard: pay()
+    activate DebitCard
+    DebitCard -> ATMCard: validate_card()
+    activate ATMCard
+    ATMCard --> DebitCard: return card_valid
+    deactivate ATMCard
+    DebitCard -> DebitCard: calculate_fee()
+    DebitCard --> Payment: return payment_success
+    deactivate DebitCard 
+
+else Pay with CreditCard
+    Payment -> CreditCard: pay()
+    activate CreditCard
+    CreditCard -> ATMCard: validate_card()
+    activate ATMCard
+    ATMCard --> CreditCard: return card_valid
+    deactivate ATMCard
+    CreditCard -> CreditCard: calculate_interest()
+    CreditCard --> Payment: return payment_success
+    deactivate CreditCard 
+end
+
+Payment -> Controller: return payment_success
+deactivate Payment 
+
+loop Update Booking Status
+    Controller -> Booking: get_passengers()
+    activate Booking 
+    Booking -> Passenger: get_seat()
+    activate Passenger 
+    Passenger -> Seat: update_seat_status()
+    activate Seat 
+
+    Seat -> Passenger: return success
+    deactivate Seat 
+
+    Passenger -> Booking: return success
+    deactivate Passenger 
+
+    Booking -> Controller: return success
+    deactivate Booking
+end
+
+Controller -> Booking: update_booking_status()
+activate Booking 
+Booking -> Controller: return success
+deactivate Booking
+
+Controller -> Account: add_booking_history()
+activate Account 
+Account --> Controller: return success
+deactivate Account 
+
+Controller -> UI: return booking_success
+deactivate Controller
+
+UI -> user: display_booking_confirmation()
+deactivate UI
+
+@enduml

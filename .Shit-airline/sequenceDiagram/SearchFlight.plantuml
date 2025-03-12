@@ -1,0 +1,26 @@
+@startuml SearchFlight
+
+actor "User" as user
+participant UI
+participant Controller
+participant FlightRoute
+
+== Search Flight ==
+
+loop
+   user -> UI: submit_search_form()
+   activate UI
+   UI -> Controller: search_flight_form()
+   activate Controller 
+   Controller -> FlightRoute: search_flights()
+   activate FlightRoute 
+   FlightRoute -> FlightRoute: validate_search_criteria()
+   FlightRoute --> Controller: return available_flights[]
+   deactivate FlightRoute
+   Controller --> UI: return search_results
+   deactivate Controller
+   UI --> user: display_flights()
+   deactivate UI
+end
+
+@enduml

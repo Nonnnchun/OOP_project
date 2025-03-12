@@ -2,129 +2,253 @@
 
 classDiagram
     direction TB
+    
+    %% Controller Class
     class Controller {
-        -plane_list
-        -account_list
-        -flightRoute_list
-        +flight_search()
+        -planes[]
+        -accounts[]
+        -logged_in_user
+        -flights[]
+        -bookings[]
+        -next_flight_id
+        -luggage_system
+        -airports[]
+        +register(email, password, firstname, lastname)
+        +login(email, password)
+        +logout()
+        +get_logged_in_user()
+        +get_flight_by_id(flight_id)
+        +create_booking(flight_id, luggage_kg)
+        +add_booking_history(booking)
+        +search_flights(origin, destination, date)
+        +add_flight(flight)
+        +get_flight(flight_id)
+        +update_flight(updated_flight)
+        +delete_flight(flight_id)
+        +filter_flights(query, available_only)
+        +add_plane(plane)
+        +add_airport(airport)
+        +generate_flight_id()
+        +calculate_luggage_price(luggage_kg)
+        +get_booking(booking_reference)
     }
 
+    %% Seat Class
     class Seat {
         -seat_id
         -seat_type
+        -price
+        -available
+        +update_seat_status(available)
+        +is_available()
     }
 
-
-    class Airport{
+    %% Airport Class
+    class Airport {
         -name
+        -code
+        +__str__()
     }
-    class Plane{
+    
+    %% Plane Class
+    class Plane {
         -plane_id
         -aircraft
-        -seat
-
+        -seats[]
+        +_generate_seats()
+        +get_available_seats(seat_type)
     }
 
+    %% Booking Class
     class Booking {
         -booking_reference
+        -flight
+        -outbound_seat
+        -return_seat
+        -passengers[]
+        -passenger_seats[]
+        -luggage_weight
+        -luggage
         -payment
         -status
-        -flight
-        -passengerDetail list
-        -promocode_discount
-        -price
-        -luggage
-        +editBooking()
-        +price_cal()
+        -flight_date
+        -arrival_time
+        -return_flight_date
+        -return_arrival_time
+        +add_luggage(kilogram)
+        +add_passenger(passenger)
+        +add_seat(seat_id)
+        +add_return_seat(seat_id)
+        +create_payment(price)
+        +update_booking_status(status)
+        +set_flight_dates(flight_date, arrival_time)
+        +set_return_flight_dates(return_flight_date, return_arrival_time)
+        +edit(flight_date, arrival_time, outbound_seat, return_flight_date, return_arrival_time, return_seat)
+        +cancel()
+        +calculate_refund()
+        +process_refund()
+        +get_booking_by_ref(ref)
     }
 
-    class luggage{
+    %% Luggage Class
+    class Luggage {
         -kilogram
-        -price_rate
+        -price
+        +calculate_price()
     }
 
+    %% LuggagePricingSystem Class
+    class LuggagePricingSystem {
+        <<Abstract>>
+        +calculate_luggage_price(luggage)*
+    }
+
+    %% StandardPricing Class
+    %%class StandardPricing {
+    %%    -base_rate
+    %%    +calculate_luggage_price(luggage)
+    %%}
+
+    %% SeasonalPricing Class
+    %%class SeasonalPricing {
+    %%    -season_multiplier
+    %%    +calculate_luggage_price(luggage)
+    %%}
+
+
+
+
+    %% Payment Class
     class Payment {
-        -ticket_price
-        -amount
-        +processPayment()
+        -price
+        -method
+        -status
+        +process_payment(method, card_number, cvv, exp)
+        +refund(amount)
     }
 
+    %% Account Class
     class Account {
-        -password
         -email
-        -PurchasedHistory
-        -Userdetail
-        +login()
-        +register()
-        +forgotpass()
-
+        -password
+        -userdetail
+        -booking_history[]
+        +check_password(password)
+        +change_password(old_password, new_password, confirm_new_password)
     }
-    class Userdetail{
-        -Firstname
-        -Lastname
+    
+    %% UserDetail Class
+    class UserDetail {
+        -firstname
+        -lastname
+        -points
         -birthday
         -gender
         -identification
         -nationality
         -phone_number
         -address
-        -point
         -promocode_list
-        +editprofile()
-        +usepoint()
-        +get_promocode
+        -booking_list
+        -redeemed_codes
+        +edit_profile(firstname, lastname, phone_number, address, birthday, gender, nationality)
+        +redeem_promocode(promo)
+        +get_owned_codes(promotion_codes)
     }
-    class Paymentmethod{
-
+    
+    %% PaymentMethod Class
+    class PaymentMethod {
+        <<Abstract>>
+        -method_id
+        +process_payment()*
     }
 
-    class Promocode{
+    %% ATMCard Class
+    class ATMCard {
+        -card_number
+        -card_CVV
+        -card_EXP
+        +validate_card()
+    }
+
+    %% CreditCard Class
+    class CreditCard {
+        +process_payment()
+    }
+
+    %% DebitCard Class
+    class DebitCard {
+        -fee: 7%
+        +calculate_fee()
+        +process_payment()
+    }
+
+    %% Promocode Class
+    class Promocode {
         -code
+        -points
         -discount_percent
         -expiration_date
-        +isValid()
+        -description
+        +can_redeem(user_points)
+        +is_expired()
     }
 
-    class FlightRoute{
-        -origin
-        -destination
+    %% FlightRoute Class
+    class FlightRoute {
+        -flight_id
+        -origin_airport
+        -destination_airport
         -departure_time
         -arrive_time
+        -plane
+        -available_departure_dates
+        -available_arrival_dates
+        -return_departure_dates
+        -return_arrival_dates
+        -outbound_seats
+        -return_seats
+        +display_flight_info()
+        +is_round_trip()
+        +get_routes()
+        +add_outbound_seats(seats)
+        +add_return_seats(seats)
     }
 
-    class PassengerDetail{
-        -passengerType
-        -passengerName
-        -contact
-        -birthday
+    %% Passenger Class
+    class Passenger {
+        -firstname
+        -lastname
+        -phone
     }
 
-    class PassengerType{
-        -type
-        -discount_percent
-    }
+    %% Relationships
+    Controller "1" *-- "*" Airport: manages
+    Controller "1" *-- "*" Plane: manages
+    Controller "1" *-- "*" FlightRoute: manages
+    Controller "1" *-- "*" Booking: manages
+    Controller "1" *-- "1" LuggagePricingSystem: uses
+    Controller "1" *-- "*" Account: manages
+    
+    Plane "1" *-- "*" Seat: contains
+    
+    Booking "1" --> "1" FlightRoute: references
+    Booking "1" --> "0..1" Seat: outbound_seat
+    Booking "1" --> "0..1" Seat: return_seat
+    Booking "1" --> "*" Passenger: has
+    Booking "1" --> "0..1" Luggage: has
+    Booking "1" --> "0..1" Payment: has
+    
+    Account "1" --> "1" UserDetail: has
+    Account "1" --> "*" Booking: booking_history
+    
+    UserDetail "1" --> "*" Promocode: redeemed_codes
+    
+    Payment "1" --> "0..1" PaymentMethod: uses
+    
+    PaymentMethod <|-- ATMCard: extends
+    ATMCard <|-- CreditCard: extends
+    ATMCard <|-- DebitCard: extends
+    
+    LuggagePricingSystem "1" --> "*" Luggage: calculates price
 
-
- 
-    PassengerDetail --> PassengerType
-    Paymentmethod <|-- OnlineBanking
-    Paymentmethod  Payment
-    Paymentmethod <|-- Card
-    Card <|-- Credit_Card
-    Card <|-- Debit_Card
-    Controller o-- Airport 
-    Plane o-- Seat
-    Controller o-- FlightRoute
-    Controller "1" --o "" Booking
-    Booking --> Payment
-    Booking <-- Seat
-    Booking --> PassengerDetail
-    Booking --> Promocode
-    Account "1" <-- "" Booking
-    Promocode -- Account
-    Controller o-- Plane
-    Plane --> Seat
-    Account --> Userdetail
-    Booking --> luggage
-    Account --o Controller
-    Payment -- Paymentmethod
