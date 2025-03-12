@@ -13,111 +13,57 @@ YELLOW_TEXT = "#333333"  # Dark text for contrast
 YELLOW_BACKGROUND = "#FFFEF0"  # Very light yellow background
 YELLOW_BORDER = "#FFB300"  # Border color
 
-
 @rt("/booking_summary", methods=["POST"])
 async def booking_summary(request):
+    user = controller.get_logged_in_user()
     form_data = await request.form()
     booking_ref = form_data.get("booking_ref", "").strip()
 
-    booking = next((b for b in controller.bookings if b.booking_reference == booking_ref), None)
+    booking = controller.search_booking(booking_ref)
     if not booking:
         return Title("Error"), H1("Booking not found")
 
     flight = controller.get_flight_by_id(booking.flight.flight_id)
     if not flight:
         return Title("Error"), H1("Flight not found")
+    
+    person_count = int(form_data.get("person_count", "1"))
+    code = form_data.get("code", "").strip().upper()
+    code = ''.join(c for c in code if c.isalnum() or c.isdigit())
 
-    if not hasattr(booking, 'passengers') or not booking.passengers:
-        person_count = int(form_data.get("person_count", "1"))
-        passenger_data = []
+    passenger_data = booking.passenger_data_cal(form_data, person_count)
 
-        for i in range(person_count):
-            passenger = Passenger(
-                firstname=form_data.get(f"first_name_{i}", ""),
-                lastname=form_data.get(f"last_name_{i}", ""),
-                phone=form_data.get(f"phone_{i}", ""),
-                dob=form_data.get(f"dob_{i}", "")
-            )           
-            passenger_data.append(passenger)
+    booking.passengers = passenger_data
 
-        booking.passengers = passenger_data
+    seat_ids = form_data.getlist("seat_ids") if hasattr(form_data, "getlist") else form_data.get("seat_ids", [])
+    if not isinstance(seat_ids, list):
+        seat_ids = [seat_ids]
 
-        seat_ids = form_data.getlist("seat_ids") if hasattr(form_data, "getlist") else form_data.get("seat_ids", [])
-        if not isinstance(seat_ids, list):
-            seat_ids = [seat_ids]
+    booking.assign_seat_to_passenger(seat_ids)
 
-        booking.passenger_seats = {}
-        for i, passenger in enumerate(booking.passengers):
-            if i < len(seat_ids):
-                booking.passenger_seats[passenger.id] = seat_ids[i]
-                booking.add_seat(seat_ids[i])
-
-    total_seat_price = 0
-    passenger_items = []
-
-    for passenger in booking.passengers:
-        seat_id = booking.passenger_seats.get(passenger.id, 'Not assigned')
-        seat_class = "Economy"
-        seat_price = 0
-
-        if seat_id != 'Not assigned':
-            seat = next((s for s in flight.outbound_seats if s.seat_id == seat_id), None)
-            if not seat:
-                seat = next((s for s in flight.plane.seats if s.seat_id == seat_id), None)
-            if seat:
-                seat_class = seat.seat_type
-                seat_price = seat.price
-
-        total_seat_price += seat_price
-
-        passenger_items.append(
-            Div(
-                P(f"Name: {passenger.firstname} {passenger.lastname}"),
-                P(f"Contact: {passenger.phone}"),
-                P(f"Seat: {seat_id} ({seat_class}) - ${seat_price}"),
-                cls="passenger-item"
-            )
-        )
+    total_seat_price , passenger_items = booking.passenger_total_seat_price(flight)
 
     luggage_weight_price = float(form_data.get("luggage_weight_price", "0"))
     total_price = total_seat_price + luggage_weight_price
 
-    # Create or update payment
     if not booking.payment:
         booking.create_payment(total_price)
     else:
         booking.payment.price = total_price
 
-    # Initialize prices
     original_price = booking.payment.price
     discounted_price = original_price
 
-    # Handle Promo Code
-    code = form_data.get("code", "").strip().upper()
-    # Clean the code - remove any special characters and extra spaces
-    code = ''.join(c for c in code if c.isalnum() or c.isdigit())
-    print(f"🔍 Checking Promo Code: '{code}'")
-
-    user = controller.get_logged_in_user()
     if user and code:
         discount_percent = user.userdetail.search_promo(code)
-        
+
         if discount_percent > 0:
             booking.payment.discount_payment(discount_percent)
             discounted_price = booking.payment.price
-            
-            # Only mark promo as used if it's valid and applied successfully
-            if user.userdetail.use_promo(code):
-                print(f"✅ Promo applied: {discount_percent}% off | {original_price} -> {discounted_price}")
-            else:
-                print("⚠️ Failed to mark promo code as used")
-        else:
-            print("⚠️ Invalid or expired promo code")
-    else:
-        if not user:
-            print("❌ No user logged in")
-        if not code:
-            print("ℹ️ No promo code provided")
+    
+    seat_info = []
+    for seat_id in seat_ids:
+        seat_info.append({"id": seat_id,})
 
     return Title("Booking Summary"), Div(
         Div(
@@ -176,7 +122,12 @@ async def booking_summary(request):
                 ),
                 Input(type="hidden", name="booking_ref", value=booking_ref),
                 Input(type="hidden", name="luggage_weight_price", value=str(luggage_weight_price)),
-                *[Input(type="hidden", name=k, value=v) for k, v in form_data.items() if k != "code" and k != "booking_ref" and k != "luggage_weight_price"],
+                Input(type="hidden", name="person_count", value=str(person_count)),
+                *[Input(type="hidden", name="seat_ids", value=seat_id) for seat_id in seat_ids],
+                *[Input(type="hidden", name=f"first_name_{i}", value=passenger.firstname) for i, passenger in enumerate(booking.passengers)],
+                *[Input(type="hidden", name=f"last_name_{i}", value=passenger.lastname) for i, passenger in enumerate(booking.passengers)],
+                *[Input(type="hidden", name=f"phone_{i}", value=passenger.phone) for i, passenger in enumerate(booking.passengers)],
+                *[Input(type="hidden", name=f"dob_{i}", value=passenger.dob) for i, passenger in enumerate(booking.passengers)],
                 action="/booking_summary",
                 method="post"
             ),
@@ -186,8 +137,13 @@ async def booking_summary(request):
         Div(
             Form(
                 Button("Back", type="button", cls="back-btn", onclick="history.back()"),
+                *[Input(type="hidden", name="seat_ids", value=seat_id) for seat_id in seat_ids],
                 Input(type="hidden", name="booking_ref", value=booking_ref),
-                Input(type="hidden", name="total_price", value=str(total_price)),
+                Input(type="hidden", name="person_count", value=str(person_count)),
+                Input(type="hidden", name="luggage_weight_price", value=str(luggage_weight_price)),
+                Input(type="hidden", name="used_code", value=code),
+                Input(type="hidden", name="total_price", value=str(discounted_price)),
+                
                 Button("Confirm and Pay", type="submit", cls="confirm-btn"),
                 action="/payment",
                 method="post"
@@ -195,8 +151,8 @@ async def booking_summary(request):
             cls="action-buttons"
         ),
         cls="container"
-    )
-    
+    )   
+
 @rt("/manage-booking")
 def manage_booking():
     """Main page showing all bookings with edit and cancel options"""
@@ -240,12 +196,12 @@ async def edit_booking_page(ref: str, flight_date: str = "", confirm: bool = Fal
                 if old_seat_id:
                     old_seat = next((s for s in booking.flight.plane.seats if s.seat_id == old_seat_id), None)
                     if old_seat:
-                        old_seat.is_available = True
+                        old_seat.update_seat_status(True)
                 
                 # Assign new seat
                 new_seat = next((s for s in booking.flight.plane.seats if s.seat_id == new_seat_id), None)
                 if new_seat:
-                    new_seat.is_available = False
+                    new_seat.update_seat_status(False)
                     booking.passenger_seats[passenger_id] = new_seat_id
 
         return get_booking_table(), Script("window.location.reload();")
@@ -262,30 +218,41 @@ async def edit_booking_page(ref: str, flight_date: str = "", confirm: bool = Fal
         for passenger in booking.passengers:
             current_seat_id = booking.passenger_seats.get(passenger.id, "")
             
-            # Get available seats plus current seat
-            available_seats = [seat for seat in booking.flight.plane.seats 
-                             if seat.is_available or seat.seat_id == current_seat_id]
+            # Get the current seat to determine its class
+            current_seat = next((seat for seat in booking.flight.plane.seats 
+                               if seat.seat_id == current_seat_id), None)
             
-            seat_options = [
-                Option(
-                    f"{seat.seat_id} ({seat.seat_type})", 
-                    value=seat.seat_id,
-                    selected=(seat.seat_id == current_seat_id)
-                ) for seat in available_seats
-            ]
-            
-            passenger_seat_forms.append(
-                Div(
-                    H4(f"Seat for {passenger.firstname} {passenger.lastname}", 
-                       style="color: #ffee63; margin-bottom: 10px;"),
-                    Select(
-                        name=f"passenger_seat_{passenger.id}",
-                        *seat_options,
-                        style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;"
-                    ),
-                    style="background-color: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px;"
+            if current_seat:
+                # Only show seats of the same class as the current seat
+                seat_type = current_seat.seat_type
+                
+                # Get available seats of the same class plus current seat
+                available_seats = [seat for seat in booking.flight.plane.seats 
+                                 if (seat.is_available() or seat.seat_id == current_seat_id)
+                                 and seat.seat_type == seat_type]
+                
+                seat_options = [
+                    Option(
+                        f"{seat.seat_id} ({seat.seat_type})", 
+                        value=seat.seat_id,
+                        selected=(seat.seat_id == current_seat_id)
+                    ) for seat in available_seats
+                ]
+                
+                passenger_seat_forms.append(
+                    Div(
+                        H4(f"Seat for {passenger.firstname} {passenger.lastname}", 
+                           style="color: #ffee63; margin-bottom: 10px;"),
+                        P(f"Current seat class: {seat_type}", 
+                          style="color: #fff; margin-bottom: 10px;"),
+                        Select(
+                            name=f"passenger_seat_{passenger.id}",
+                            *seat_options,
+                            style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;"
+                        ),
+                        style="background-color: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px;"
+                    )
                 )
-            )
 
     return Card(
         H3(f"Edit Booking {ref}", style="color: #ffee63; text-align: center; margin-bottom: 20px;"),
@@ -331,8 +298,10 @@ def get_booking_table():
             H3("You must be logged in to view bookings.", style="color: red; text-align: center;")
         )
 
+    user = controller.get_logged_in_user()
+
     # 🔥 Filter bookings to only show those belonging to the logged-in user
-    user_bookings = [b for b in Booking.bookings if b.user_email == controller.logged_in_user.email]
+    user_bookings = [b for b in user.booking_list]
 
     if not user_bookings:
         return Div(
@@ -435,12 +404,45 @@ def cancel_booking(ref: str):
     """Cancel a booking"""
     booking = next((b for b in Booking.bookings if b.booking_reference == ref), None)
     if booking:
+        # Explicitly release all seats before cancelling
+        if hasattr(booking, 'passenger_seats') and booking.passenger_seats:
+            for passenger_id, seat_id in booking.passenger_seats.items():
+                # Find the seat in the flight's plane seats
+                seat = next((s for s in booking.flight.plane.seats if s.seat_id == seat_id), None)
+                if seat:
+                    # Mark the seat as available
+                    seat.update_seat_status(True)
+                    print(f"Released seat {seat_id} for booking {ref}")
+        
+        # Now cancel the booking
         booking.cancel()
         return get_booking_table(), Script("window.location.reload();")
     return RedirectResponse("/manage-booking?error=Booking+not+found")
 
 @rt("/confirm-cancel/{ref}")
 def confirm_cancel(ref: str):
+    """Show cancellation confirmation dialog"""
+    return Dialog(
+        H3("Confirm Cancellation", style="color: #ff6347; margin-bottom: 20px;"),
+        P(f"Are you sure you want to cancel booking {ref}?"),
+        Div(
+            Button("Yes, Cancel",
+                   hx_post=f"/cancel-booking/{ref}",
+                   hx_target="#manage-booking-table",
+                   hx_swap="outerHTML",
+                   cls="danger",
+                   onclick="this.closest('dialog').close();",
+                   style="background-color: #ff6347; color: white; margin-right: 10px;"),  
+            Button("No, Keep Booking", 
+                   onclick="this.closest('dialog').close()", 
+                   cls="secondary",
+                   style="background-color: #4CAF50; color: white;")
+        ),
+        open=True,
+        id="confirm-dialog",
+        style="padding: 20px; border-radius: 8px;"
+    )
+
     """Show cancellation confirmation dialog"""
     return Dialog(
         H3("Confirm Cancellation", style="color: #ff6347; margin-bottom: 20px;"),

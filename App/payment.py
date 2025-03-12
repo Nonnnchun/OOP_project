@@ -10,7 +10,9 @@ async def payment(request):
     form_data = await request.form()
     booking_ref = form_data.get("booking_ref", "").strip()
     total_price = float(form_data.get("total_price", "0").strip())
-    
+    code = form_data.get("used_code", "").strip().upper()
+    code = ''.join(c for c in code if c.isalnum() or c.isdigit())
+
     styles = Style("""
         body { 
             height: 100vh; 
@@ -91,11 +93,10 @@ async def payment(request):
         }
     """)
 
-    booking = next((b for b in controller.bookings if b.booking_reference == booking_ref), None)
+    booking = controller.search_booking(booking_ref)
     if not booking:
         return Title("Error"), H1("Booking not found")
     
-    # JavaScript for validation
     validation_script = Script("""
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.querySelector('form');
@@ -252,6 +253,7 @@ async def payment(request):
             ),
             Input(type="hidden", name="booking_ref", value=booking_ref),
             Input(type="hidden", name="final_price", id="final-price", value=str(total_price)),
+            Input(type="hidden", name="used_code", value=code),
             Button("Pay Now", type="submit", cls="payment-btn"),
             action="/payment_confirmation",
             method="post",
@@ -263,22 +265,25 @@ async def payment(request):
 async def payment_confirmation(request):
     form_data = await request.form()
     booking_ref = form_data.get("booking_ref", "").strip()
+    code = form_data.get("used_code", "").strip().upper()
+    code = ''.join(c for c in code if c.isalnum() or c.isdigit())
     card_type = form_data.get("card_type", "").strip()
     card_number = form_data.get("card_number", "").strip()
     exp = form_data.get("expiry", "").strip()
     cvv = form_data.get("cvv", "").strip()
     final_price = float(form_data.get("final_price", "0").strip())
 
-    booking = next((b for b in controller.bookings if b.booking_reference == booking_ref), None)
+    user = controller.get_logged_in_user()
+    booking = controller.search_booking(booking_ref)
     if not booking:
         return Title("Error"), H1("Booking not found")
     
-    # Update the payment price if it's different (due to debit card fee)
     if booking.payment.price != final_price:
         booking.payment.price = final_price
     
+    user.userdetail.used_code(code)
     booking.update_booking_status()
-    controller.add_booking_history(booking)
+    user.update_booking_history(code)
     booking.payment.process_payment(card_type, card_number, cvv, exp)
     
     styles = Style("""

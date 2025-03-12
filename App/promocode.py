@@ -8,6 +8,13 @@ promocode_app = app
 @rt("/promocode")
 def get():
     """หน้าแสดงโปรโมชั่น & แต้มของผู้ใช้"""
+
+    user = controller.get_logged_in_user()
+    user_account = user.userdetail
+
+    print(f"{user_account.promocode_list}")
+    print(f"{user_account.redeemed_codes}")
+
     return Title("Promotion Codes"), Container(
         Button("Back to Home", 
                hx_get="/home", 
@@ -42,7 +49,6 @@ def get():
             }
         """)
     )
-
 
 def get_page_styles():
     return Style("""
@@ -115,6 +121,8 @@ def get_page_styles():
     """)
 
 def get_user_info():
+    user = controller.get_logged_in_user()
+    user_account = user.userdetail
     """แสดงแต้มและโค้ดที่แลกแล้วของผู้ใช้"""
     return Div(
         Div(
@@ -126,11 +134,11 @@ def get_user_info():
         id="update-section"
     )
 
-# สมมติว่ามี user ที่ล็อกอินอยู่
-user_account = UserDetail("John", "Doe", points=500)
-
 def get_owned_codes_list():
     """แสดงโค้ดที่แลกแล้วของผู้ใช้"""
+    user = controller.get_logged_in_user()
+    user_account = user.userdetail
+
     if not user_account.promocode_list:  # ✅ ใช้ instance ของ user_account
         return P("You haven't redeemed any codes yet.", style="color: #777;")
     
@@ -144,14 +152,15 @@ def get_owned_codes_list():
             owned_code_list.append(
                 Div(
                     f"{code} : -{promo.discount_percent}% {expired_text}",
-                    cls=cls
+                    cls=cls,style="color: black;"
                 )
             )
     
     return Div(*owned_code_list, id="owned-codes", cls="mt-2")
 
-
 def get_promotion_table():
+    user = controller.get_logged_in_user()
+    user_account = user.userdetail
     """สร้างตารางแสดงโค้ดโปรโมชั่น"""
     promo_rows = []
     
@@ -215,6 +224,9 @@ def get_promotion_table():
 @rt("/confirm-redeem/{code}")
 def confirm_redeem(code: str):
     """แสดงป๊อปอัปยืนยันก่อนแลก"""
+    user = controller.get_logged_in_user()
+    user_account = user.userdetail
+
     promo = next((p for p in promotion_codes if p.code == code), None)
 
     if not promo:
@@ -269,6 +281,9 @@ def confirm_redeem(code: str):
 
 @rt("/redeem/{code}")
 def redeem(code: str):
+    user = controller.get_logged_in_user()
+    user_account = user.userdetail
+
     """ดำเนินการแลกโค้ด"""
     promo = next((p for p in promotion_codes if p.code == code), None)
 

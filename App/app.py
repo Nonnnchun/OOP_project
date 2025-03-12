@@ -41,7 +41,5 @@ app, rt = fast_app(routes=[
     Route('/promocode', promocode_app, name='promocode'),
     Route('/confirm-redeem/{code}', promocode_app, name='confirmpromo'),
     Route('/redeem/{code}', promocode_app, name='redeem'),
-    
     ])
-
 serve()
