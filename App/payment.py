@@ -116,10 +116,10 @@ async def payment(request):
                 if (cardTypeSelect.value === 'DebitCard') {
                     const fee = originalPrice * debitFee;
                     const totalWithFee = originalPrice + fee;
-                    totalAmountElement.textContent = `Total Amount: $${totalWithFee.toFixed(2)} (includes 7% fee)`;
+                    totalAmountElement.textContent = `Total Amount: ฿${totalWithFee.toFixed(2)} (includes 7% fee)`;
                     document.getElementById('final-price').value = totalWithFee.toFixed(2);
                 } else {
-                    totalAmountElement.textContent = `Total Amount: $${originalPrice.toFixed(2)}`;
+                    totalAmountElement.textContent = `Total Amount: ฿${originalPrice.toFixed(2)}`;
                     document.getElementById('final-price').value = originalPrice.toFixed(2);
                 }
             }
@@ -218,7 +218,7 @@ async def payment(request):
     
     return Title("Payment"), styles, validation_script, Div(
         H1("Payment Details"),
-        P(f"Total Amount: ${total_price}", id="total-amount"),
+        P(f"Total Amount: ฿{total_price}", id="total-amount"),
         Form(
             Div(
                 Label("Card Type:"),

@@ -442,25 +442,3 @@ def confirm_cancel(ref: str):
         id="confirm-dialog",
         style="padding: 20px; border-radius: 8px;"
     )
-
-    """Show cancellation confirmation dialog"""
-    return Dialog(
-        H3("Confirm Cancellation", style="color: #ff6347; margin-bottom: 20px;"),
-        P(f"Are you sure you want to cancel booking {ref}?"),
-        Div(
-            Button("Yes, Cancel",
-                   hx_post=f"/cancel-booking/{ref}",
-                   hx_target="#manage-booking-table",
-                   hx_swap="outerHTML",
-                   cls="danger",
-                   onclick="this.closest('dialog').close();",
-                   style="background-color: #ff6347; color: white; margin-right: 10px;"),  
-            Button("No, Keep Booking", 
-                   onclick="this.closest('dialog').close()", 
-                   cls="secondary",
-                   style="background-color: #4CAF50; color: white;")
-        ),
-        open=True,
-        id="confirm-dialog",
-        style="padding: 20px; border-radius: 8px;"
-    )
