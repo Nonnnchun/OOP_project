@@ -74,7 +74,7 @@ async def booking_summary(request):
             Div(
                 P(f"Name: {passenger.firstname} {passenger.lastname}"),
                 P(f"Contact: {passenger.phone}"),
-                P(f"Seat: {seat_id} ({seat_class}) - ${seat_price}"),
+                P(f"Seat: {seat_id} ({seat_class}) - ฿{seat_price}"),
                 cls="passenger-item"
             )
         )
@@ -150,7 +150,7 @@ async def booking_summary(request):
             H2("Luggage Information"),
             Div(
                 P(f"Total Luggage Weight: {booking.luggage.kilogram} kg"),
-                P(f"Luggage Fee: ${luggage_weight_price}"),
+                P(f"Luggage Fee: ฿{luggage_weight_price}"),
                 cls="luggage-details",
             ),
             cls="section"
@@ -158,10 +158,10 @@ async def booking_summary(request):
 
         Div(
             H2("Price Summary"),
-            P(f"Seat Prices: ${total_seat_price}"),
-            P(f"Luggage Fee: ${luggage_weight_price}"),
-            P(f"Total Price: ${original_price}"),
-            P(f"Price After Use Promocode: ${discounted_price}"),  
+            P(f"Seat Prices: ฿{total_seat_price}"),
+            P(f"Luggage Fee: ฿{luggage_weight_price}"),
+            P(f"Total Price: ฿{original_price}"),
+            P(f"Price After Use Promocode: ฿{discounted_price}"),  
             cls="price-summary"
         ),
 
