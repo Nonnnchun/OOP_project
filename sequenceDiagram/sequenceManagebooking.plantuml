@@ -1,51 +1,84 @@
-@startuml
+@startuml Manage Booking Flow
+
 actor "User" as user
-participant Account
-participant Controller
-participant Booking
-participant FlightRoute
-participant Seat
-participant Payment
+participant "UI" as frontend
+participant "Controller" as controller
+participant "Booking" as booking
+participant "FlightRoute" as flight
+participant "Seat" as seat
+participant "Payment" as payment
 
-== Manage Booking (Edit_booking/Cancel_booking) ==
+== Manage Booking (Edit/Cancel) ==
 
-user -> Controller: Select Edit_booking/Cancel_booking
-activate Controller #BBBBBB
-alt Edit_booking
-    Controller -> Booking: edit_booking ()
-    activate Booking #BBBBBB
-    Booking -> FlightRoute: get_available_flight ()
-    activate FlightRoute #BBBBBB
-    FlightRoute --> Booking: Return available_flights []
-    deactivate FlightRoute
-    Booking -> Seat:get_available_seat ()
-    activate Seat #BBBBBB
-    Seat --> Booking:Return available_seat []
-    deactivate Seat
-    Booking -> Seat:refund_seat()
-    activate Seat #BBBBBB
-    Seat--> Booking:Return refund_seat
-    deactivate Seat
-    Booking --> Controller: Return Flight_Updated
-    deactivate Booking
+user -> frontend: Access Manage Booking
+frontend -> controller: manage-booking
+controller -> booking: get_booking_table()
+activate booking #BBBBBB
+booking --> frontend: Return bookings list
+deactivate booking
 
-else Cancel_booking
-    Controller -> Booking: cancel_booking ()
-    activate Booking #BBBBBB
-    Booking -> Payment: refund_payment ()
-    activate Payment #BBBBBB
-    Payment --> Booking: Return Refund_Processed
-    deactivate Payment
-    Booking -> Seat:refund_seat()
-    activate Seat #BBBBBB
-    Seat--> Booking:Return refund_seat
-    deactivate Seat
-    Booking --> Controller: Return cancel_booking
+alt Edit Booking
+    user -> frontend: Click Edit Button
+    frontend -> controller: edit-booking
+    controller -> booking: get_booking_by_ref
+    activate booking #BBBBBB
+    booking -> flight: get flight dates
+    activate flight #BBBBBB
+    flight --> booking: return available dates
+    deactivate flight
+    booking -> seat: get available seats by type
+    activate seat #BBBBBB
+    seat --> booking: return filtered seats 
+    deactivate seat 
+    booking --> frontend: return edit form
+    deactivate booking
 
-    deactivate Booking
+    user -> frontend: Submit Changes
+    frontend -> controller: edit-booking
+    activate controller #BBBBBB
+    controller -> booking: update_booking()
+    activate booking #BBBBBB
+    booking -> seat: release old seat
+    activate seat #BBBBBB
+    seat --> booking: old seat released
+    deactivate seat
+    booking -> seat: assign new seat
+    activate seat #BBBBBB
+    seat --> booking: new seat assigned
+    deactivate seat
+    booking --> controller: booking updated
+    deactivate booking
+    controller --> frontend: refresh booking table
+    deactivate controller
+
+else Cancel Booking
+    user -> frontend: Click Cancel Button
+    frontend -> controller: confirm-cancel
+    activate controller #BBBBBB
+    controller --> frontend: Show confirmation dialog
+    deactivate controller
+    user -> frontend: Confirm Cancellation
+    frontend -> controller: cancel-booking
+    activate controller #BBBBBB
+    controller -> booking: cancel()
+    activate booking #BBBBBB
+    booking -> booking: calculate_refund()
+    booking -> payment: process_refund()
+    activate payment #BBBBBB
+    payment --> booking: refund processed
+    deactivate payment
+    booking -> seat: release seats
+    activate seat #BBBBBB
+    seat --> booking: seats released
+    deactivate seat
+    booking -> booking: update_booking_status("Cancelled")
+    booking --> controller: cancellation complete
+    deactivate booking
+    controller --> frontend: refresh booking table
+    deactivate controller
 
 end
 
-Controller -->user: Edit_booking/Cancel_booking Confirmed
-deactivate Controller
-@enduml 
+frontend --> user: Show Updated Booking Status
+
+@enduml
