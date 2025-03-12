@@ -1269,7 +1269,7 @@ def initialize_system():
     controller = Controller()
     
     # Setup admin account
-    controller.logged_in_user = Account("admin", "admin", UserDetail("admin", "admin", 5000))
+    # controller.logged_in_user = Account("admin", "admin", UserDetail("admin", "admin", 5000))
     
     # Setup airports
     jfk = Airport("John F. Kennedy International Airport", "JFK")
