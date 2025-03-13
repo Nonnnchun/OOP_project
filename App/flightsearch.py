@@ -34,7 +34,8 @@ def search():
             border-radius: 5px;
             border: 1px solid #ccc;
             font-size: 16px;
-            background-color: #fff;
+            font-color:black
+            background-color: #ffe600;
             cursor: pointer;
         }
         .search-btn {

@@ -15,24 +15,13 @@ async def passenger_details(request):
         if not isinstance(seat_ids, list):
             seat_ids = [seat_ids]
         
-        person_count = int(form_data.get("person_count", "1"))
-        total_weight = 0
-        person_weights = []
-    
-        for i in range(1, person_count + 1):
-            weight_key = f"weight_{i}"
-            if weight_key in form_data:
-                try:
-                    weight = float(form_data.get(weight_key, 0))
-                    person_weights.append(weight)
-                    total_weight += weight
-                except ValueError:
-                    person_weights.append(0)
+        booking = controller.search_booking(booking_ref)
 
-        booking = next((b for b in controller.bookings if b.booking_reference == booking_ref), None)
+        person_count = int(form_data.get("person_count", "1"))
         
-        if booking:
-            booking.add_luggage(Luggage(total_weight))
+        total_weight = booking.calculate_weights(form_data)
+        
+        booking.add_luggage(Luggage(total_weight))
 
         luggage_weight_price = booking.luggage.calculate_price()
 

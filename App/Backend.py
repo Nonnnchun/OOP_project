@@ -24,11 +24,10 @@ class Luggage:
     def price(self, value): self.__price = value
         
     def calculate_price(self):
-        # Check if kilogram is a Luggage object (recursive case)
-        if isinstance(self.kilogram, Luggage):
-            return self.kilogram.calculate_price()
+        # # Check if kilogram is a Luggage object (recursive case)
+        # if isinstance(self.kilogram, Luggage):
+        #     return self.kilogram.calculate_price()
             
-        # Normal case - kilogram is a number
         if self.kilogram >= 30:
             self.price += (self.kilogram - 20) * 2.25
         elif self.kilogram >= 20:
@@ -201,63 +200,35 @@ class UserDetail:
     def search_promo(self, code):
         """Search for a promo code and return discount percentage if valid"""
         print(f"Searching for promo code: {code}")
-        
-        # First check if code is in user's promocode_list
-        if code in self.promocode_list:
-            promo = next((p for p in promotion_codes if p.code == code), None)
-            if promo:
+
+        for promo in self.redeemed_codes:
+            if promo.code == code:
                 print(f"Found promo code in user's list: {code} ({promo.discount_percent}% off)")
                 return promo.discount_percent
         
-        # Check if code has already been redeemed
-        if any(promo.code == code for promo in self.redeemed_codes):
-            print(f"Promo code {code} already redeemed!")
-            return 0
-            
-        # Search in global promotion codes for new redemption
-        for promo in promotion_codes:
-            if promo.code == code:
-                # Check if expired
-                if promo.is_expired():
-                    print(f"Promo code {code} is expired!")
-                    return 0
-                    
-                # Check if user has enough points
-                if not promo.can_redeem(self.points):
-                    print(f"Not enough points to redeem {code}!")
-                    return 0
-                    
-                # Add to user's promocode list if valid
-                self.promocode_list.append(promo.code)
-                print(f"Valid promo code found: {code} ({promo.discount_percent}% off)")
-                return promo.discount_percent
-                
         print(f"Promo code {code} not found")
         return 0
 
-    def use_promo(self, code):
-        """Mark a promo code as used"""
-        for promo in promotion_codes:
-            if promo.code == code:
-                # Add to redeemed_codes if not already there
-                if promo not in self.redeemed_codes:
-                    self.redeemed_codes.append(promo)
-                
-                # Remove from promocode_list if it exists
-                if code in self.promocode_list:
-                    self.promocode_list.remove(code)
-                
+    def used_code(self, code):
+        for promo in self.redeemed_codes:
+            if promo.code == code:               
+                self.redeemed_codes.remove(promo)
+                for promocode in self.promocode_list:
+                    # print(promocode)
+                    # print(promo.code)
+                    code = promocode.strip('')
+                    if code == promo.code:
+                        print("remove")
+                        self.promocode_list.remove(code)
+
                 print(f"Marked promo code {code} as used")
                 return True
-        
-        print(f"Promo code {code} not found in available codes")
-        return False
-                        
+
 class Seat:
     def __init__(self, seat_id, seat_type, price):
         self.__seat_id = seat_id
         self.__seat_type = seat_type
-        self.__seat_status = True  # Available by default
+        self.__seat_status = True
         self.__price = price
     
     @property
@@ -332,8 +303,18 @@ class Account:
         if not re.search(r"[!@#$%^&*(),.?\"_:{}|<>]", new_password):  
             return "New password must contain at least one special character (!@#$%^&* etc.)."
 
+    # 🔥 Make sure the password is actually updating
+        print(f"Before update: {self.password}")
         self.password = new_password
+        print(f"After update: {self.password}")
+
+    # ✅ If using a database, make sure to save it:
+    # database.update_user_password(self.email, self.password)
+
         return "Password changed successfully"
+
+    def update_booking_history(self, booking):
+        self.booking_list.append(booking)
 
 class Plane:
     def __init__(self, plane_id, aircraft):
@@ -627,7 +608,6 @@ class Payment:
         self.__price = price
         self.__method = None
         self.__status = "Pending"
-        
     @property
     def price(self): return self.__price
     @property
@@ -642,20 +622,16 @@ class Payment:
     @price.setter
     def price(self, value): self.__price = value
     
-
     def process_payment(self, method, card_number, cvv, exp):
         if method == "CreditCard":
             self.method = CreditCard(card_number, cvv, exp)
         elif method == "DebitCard":
             self.method = DebitCard(card_number, cvv, exp)
             
-        # Call the payment method's process_payment
         if self.method:
             result = self.method.process_payment(self.price)
             if result and result.get("status") == "Paid":
                 self.status = "Completed"
-                return True
-        return False
         
     def refund(self, amount=None):
         if not self.method:
@@ -665,12 +641,13 @@ class Payment:
         print(f"Refunding {refund_amount} to {self.method.method_id} ending with {self.method.card_number[-4:]}")
         self.status = "Refunded"
         return True
+    
     def discount_payment(self, discount_percent):
         if discount_percent is None:
             discount_percent = 0
         
         discount = (100 - discount_percent) / 100
-        discounted_price = self.price * discount  # Compute before updating
+        discounted_price = self.price * discount
         print(f"Applying {discount_percent}% discount: {self.price} -> {discounted_price}")
         self.price = discounted_price
 
@@ -684,7 +661,6 @@ class PaymentMethod:
     def method_id(self, value): self.__method_id = value
     
     def process_payment(self, amount):
-        # Abstract method to be implemented by subclasses
         raise NotImplementedError("Subclasses must implement process_payment method")
 
 class ATMCard(PaymentMethod):
@@ -706,7 +682,6 @@ class CreditCard(ATMCard):
         super().__init__(method_id, card_number, card_CVV, card_EXP)
     
     def process_payment(self, amount):
-        # Process the payment logic here
         return {
             "amount": amount,
             "status": "Paid"
@@ -715,23 +690,10 @@ class CreditCard(ATMCard):
 class DebitCard(ATMCard):
     def __init__(self, card_number, card_CVV, card_EXP, method_id="DebitCard"):
         super().__init__(method_id, card_number, card_CVV, card_EXP)
-        self.__fee = 0.07  # 7% fee for debit card transactions
     
-    @property
-    def fee(self):
-        return self.__fee
-        
-    def calculate_fee(self, amount):
-        return amount * self.__fee
-        
     def process_payment(self, amount):
-        fee_amount = self.calculate_fee(amount)
-        total_amount = amount + fee_amount
-        # Process the payment logic here
         return {
-            "original_amount": amount,
-            "fee_amount": fee_amount,
-            "total_amount": total_amount,
+            "amount": amount,
             "status": "Paid"
         }
 
@@ -752,20 +714,16 @@ class Booking:
         self.__payment = None
         self.__status = 'Unpaid'
         
-        # Auto-set the flight dates from the flight object
         self.__flight_date = flight.departure_time
         self.__arrival_time = flight.arrive_time
         
-        # For round trips, initialize return flight information
         self.__return_flight_date = None
         self.__return_arrival_time = None
         
-        # Auto-set return flight dates if this is a round trip
         if flight.is_round_trip() and flight.return_departure_dates and flight.return_arrival_dates:
             self.__return_flight_date = flight.return_departure_dates[0]
             self.__return_arrival_time = flight.return_arrival_dates[0]
         
-        # Add to class bookings list
         Booking.bookings.append(self)
     @property
     def user_email(self): return self.__user_email
@@ -797,7 +755,8 @@ class Booking:
     def return_flight_date(self): return self.__return_flight_date
     @property
     def return_arrival_time(self): return self.__return_arrival_time
-    
+
+
     @luggage.setter
     def luggage(self, value): self.__luggage = value
     @luggage_weight.setter
@@ -839,13 +798,44 @@ class Booking:
             self.luggage = Luggage(kilogram)
         
         print(f"Added luggage: {self.luggage_weight} kg")
-        return self.luggage_weight
     
     def add_passenger(self, passenger):
         self.passengers.append(passenger)
         print(f"Added passenger: {passenger.firstname} {passenger.lastname}")
         return True
         
+    def calculate_weights(self, form_data):
+        person_count = int(form_data.get("person_count", "1"))
+        
+        total_weight = 0
+        person_weights = []
+    
+        for i in range(1, person_count + 1):
+            weight_key = f"weight_{i}"
+            if weight_key in form_data:
+                try:
+                    weight = float(form_data.get(weight_key, 0))
+                    person_weights.append(weight)
+                    total_weight += weight
+                except ValueError:
+                    person_weights.append(0)
+        
+        return total_weight
+    
+    def passenger_data_cal(self, form_data, person_count):
+        passenger_data = []
+
+        for i in range(person_count):
+            passenger = Passenger(
+                firstname=form_data.get(f"first_name_{i}", ""),
+                lastname=form_data.get(f"last_name_{i}", ""),
+                phone=form_data.get(f"phone_{i}", ""),
+                dob=form_data.get(f"dob_{i}", "")
+            )           
+            passenger_data.append(passenger)
+
+        return passenger_data
+
     def add_seat(self, seat_id):
     # ✅ Check if the seat is already booked in any existing booking
         for booking in Booking.bookings:
@@ -900,7 +890,6 @@ class Booking:
     def create_payment(self, price):
         self.payment = Payment(price)
         print(f"Created payment: {price}")
-        return self.payment
 
     def update_booking_status(self, status="Paid"):
         self.status = status
@@ -913,6 +902,46 @@ class Booking:
         print(f"Updated booking status to: {status}")
         return True
     
+    def assign_seat_to_passenger(self, seat_list):
+        if not isinstance(seat_list, list):
+            seat_list = [seat_list]
+
+        self.passenger_seats = {}
+        for i, passenger in enumerate(self.passengers):
+            if i < len(seat_list):
+                self.passenger_seats[passenger.id] = seat_list[i]
+                self.add_seat(seat_list[i])
+
+    def passenger_total_seat_price(self, flight):
+        total_seat_price = 0
+        passenger_items = []
+
+        for passenger in self.passengers:
+            seat_id = self.passenger_seats.get(passenger.id, 'Not assigned')
+            seat_class = "N/A"
+            seat_price = 0
+
+            if seat_id != 'Not assigned':
+                seat = next((s for s in flight.outbound_seats if s.seat_id == seat_id), None)
+                if not seat:
+                    seat = next((s for s in flight.plane.seats if s.seat_id == seat_id), None)
+                if seat:
+                    seat_class = seat.seat_type
+                    seat_price = seat.price
+                
+            total_seat_price += seat_price
+
+            passenger_items.append(
+                Div(
+                    P(f"Name: {passenger.firstname} {passenger.lastname}"),
+                    P(f"Contact: {passenger.phone}"),
+                    P(f"Seat: {seat_id} ({seat_class}) - ${seat_price}"),
+                    cls="passenger-item"
+                )
+            )
+
+        return total_seat_price , passenger_items
+
     def set_flight_dates(self, flight_date, arrival_time=None):
         self.flight_date = flight_date
         self.arrival_time = arrival_time or self.flight.arrive_time
@@ -1094,13 +1123,6 @@ class Controller:
         print(f"✅ Booking Created: {booking_reference} for Flight {flight_id} by {self.logged_in_user.email}")
         return new_booking
 
-    def add_booking_history(self, booking):
-        print("Adding booking to user history")
-        if self.logged_in_user:
-            self.logged_in_user.booking_list.append(booking)
-            return True
-        return False
-
     def logout(self):
         self.logged_in_user = None
         return "Logged out successfully"
@@ -1119,7 +1141,7 @@ class Controller:
         return flight
 
     def get_flight(self, flight_id):
-        return next((flight for flight in self.flights if flight.id == flight_id), None)
+        return next((flight for flight in self.flights if flight.flight_id == flight_id), None)
 
     def update_flight(self, updated_flight):
         for i, flight in enumerate(self.flights):
@@ -1216,7 +1238,7 @@ class Controller:
     def display_all_flights(self):
         for flight in self.flights:
             flight.display_flight_info()
-            print()
+            # print()
             
     def calculate_luggage_price(self, luggage_kg):
         luggage = Luggage(luggage_kg)
@@ -1224,6 +1246,10 @@ class Controller:
         
     def get_booking(self, booking_reference):
         return Booking.get_booking_by_ref(booking_reference)
+
+    def search_booking(self , booking_ref):
+        booking = next((b for b in self.bookings if b.booking_reference == booking_ref), None)
+        return booking
 
 # Create a function to set up the initial system
 
@@ -1238,7 +1264,7 @@ def initialize_system():
     controller = Controller()
     
     # Setup admin account
-    controller.logged_in_user = Account("admin", "admin", UserDetail("admin", "admin"))
+    controller.logged_in_user = Account("admin", "admin", UserDetail("admin", "admin", 5000))
     
     # Setup airports
     jfk = Airport("John F. Kennedy International Airport", "JFK")
