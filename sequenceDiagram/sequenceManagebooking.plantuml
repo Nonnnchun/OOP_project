@@ -11,14 +11,19 @@ participant "Payment" as payment
 == Manage Booking (Edit/Cancel) ==
 
 user -> frontend: Access Manage Booking
+activate frontend#BBBBBB
 frontend -> controller: manage-booking
+activate controller #BBBBBB
 controller -> booking: get_booking_table()
+deactivate controller
 activate booking #BBBBBB
 booking --> frontend: Return bookings list
+deactivate frontend
 deactivate booking
 
 alt Edit Booking
     user -> frontend: Click Edit Button
+    activate frontend #BBBBBB
     frontend -> controller: edit-booking
     controller -> booking: get_booking_by_ref
     activate booking #BBBBBB
@@ -50,9 +55,10 @@ alt Edit Booking
     deactivate booking
     controller --> frontend: refresh booking table
     deactivate controller
-
+    deactivate frontend
 else Cancel Booking
     user -> frontend: Click Cancel Button
+    activate frontend #BBBBBB
     frontend -> controller: confirm-cancel
     activate controller #BBBBBB
     controller --> frontend: Show confirmation dialog
@@ -76,9 +82,10 @@ else Cancel Booking
     deactivate booking
     controller --> frontend: refresh booking table
     deactivate controller
-
+    
 end
-
+    
 frontend --> user: Show Updated Booking Status
+deactivate frontend
 
 @enduml
