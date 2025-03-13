@@ -65,7 +65,205 @@ async def booking_summary(request):
     for seat_id in seat_ids:
         seat_info.append({"id": seat_id,})
 
-    return Title("Booking Summary"), Div(
+    styles = Style("""
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+        }
+
+        h1, h2, h3 {
+            color: #fff;
+            text-align: center;
+        }
+
+        p {
+            color: #bbb;
+        }
+
+        /* Form Styles */
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input, select, button {
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background: #222;
+            color: #fff;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Passenger Section */
+        .passenger-section {
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .passenger-title {
+            color: #007BFF;
+        }
+
+        /* Booking Info */
+        .booking-info {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .back-btn {
+            background-color: #6c757d;
+        }
+
+        .back-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .confirm-btn {
+            background-color: #28a745;
+        }
+
+        .confirm-btn:hover {
+            background-color: #218838;
+        }
+
+        /* Booking Summary */
+        .booking-ref {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007BFF;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .passenger-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .passenger-item {
+            padding: 10px;
+            border-radius: 5px;
+            background: #2a2a2a;
+        }
+
+        /* Price Summary */
+        .price-summary {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .total-price {
+            font-weight: bold;
+            font-size: 18px;
+            color: #28a745;
+        }
+
+        /* Payment Page */
+        .payment-btn {
+            background-color: #dc3545;
+        }
+
+        .payment-btn:hover {
+            background-color: #c82333;
+        }
+
+        .success-icon {
+            font-size: 50px;
+            color: #28a745;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        /* Flight Details */
+        .flight-details {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        /* Luggage Details */
+        .luggage-details {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        /* Validation Styles */
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        input:invalid {
+            border-color: #dc3545;
+        }
+
+        .validation-info {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 3px;
+        }
+    """)
+
+    return Title("Booking Summary"), styles ,Div(
         Div(
             H1("Booking Summary"),
             P("Please review your booking details before confirming"),
@@ -136,15 +334,16 @@ async def booking_summary(request):
 
         Div(
             Form(
-                Button("Back", type="button", cls="back-btn", onclick="history.back()"),
                 *[Input(type="hidden", name="seat_ids", value=seat_id) for seat_id in seat_ids],
                 Input(type="hidden", name="booking_ref", value=booking_ref),
                 Input(type="hidden", name="person_count", value=str(person_count)),
                 Input(type="hidden", name="luggage_weight_price", value=str(luggage_weight_price)),
                 Input(type="hidden", name="used_code", value=code),
                 Input(type="hidden", name="total_price", value=str(discounted_price)),
-                
+                Div (
+                Button("Back", type="button", cls="back-btn", onclick="history.back()"),
                 Button("Confirm and Pay", type="submit", cls="confirm-btn"),
+                ),
                 action="/payment",
                 method="post"
             ),

@@ -24,11 +24,10 @@ class Luggage:
     def price(self, value): self.__price = value
         
     def calculate_price(self):
-        # Check if kilogram is a Luggage object (recursive case)
-        if isinstance(self.kilogram, Luggage):
-            return self.kilogram.calculate_price()
+        # # Check if kilogram is a Luggage object (recursive case)
+        # if isinstance(self.kilogram, Luggage):
+        #     return self.kilogram.calculate_price()
             
-        # Normal case - kilogram is a number
         if self.kilogram >= 30:
             self.price += (self.kilogram - 20) * 2.25
         elif self.kilogram >= 20:
@@ -633,8 +632,6 @@ class Payment:
             result = self.method.process_payment(self.price)
             if result and result.get("status") == "Paid":
                 self.status = "Completed"
-                return True
-        return False
         
     def refund(self, amount=None):
         if not self.method:
@@ -801,7 +798,6 @@ class Booking:
             self.luggage = Luggage(kilogram)
         
         print(f"Added luggage: {self.luggage_weight} kg")
-        return self.luggage_weight
     
     def add_passenger(self, passenger):
         self.passengers.append(passenger)
@@ -894,7 +890,6 @@ class Booking:
     def create_payment(self, price):
         self.payment = Payment(price)
         print(f"Created payment: {price}")
-        return self.payment
 
     def update_booking_status(self, status="Paid"):
         self.status = status
@@ -1269,7 +1264,7 @@ def initialize_system():
     controller = Controller()
     
     # Setup admin account
-    # controller.logged_in_user = Account("admin", "admin", UserDetail("admin", "admin", 5000))
+    controller.logged_in_user = Account("admin", "admin", UserDetail("admin", "admin", 5000))
     
     # Setup airports
     jfk = Airport("John F. Kennedy International Airport", "JFK")
