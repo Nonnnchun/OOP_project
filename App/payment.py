@@ -109,25 +109,17 @@ async def payment(request):
             const cardTypeSelect = document.querySelector('select[name="card_type"]');
             const totalAmountElement = document.getElementById('total-amount');
             const originalPrice = """ + str(total_price) + """;
-            const debitFee = 0.07; // 7% fee for debit card
             
-            // Update total amount when card type changes
+            // Update total amount when card type changes - simplified to just display original price
             function updateTotalAmount() {
-                if (cardTypeSelect.value === 'DebitCard') {
-                    const fee = originalPrice * debitFee;
-                    const totalWithFee = originalPrice + fee;
-                    totalAmountElement.textContent = `Total Amount: ฿${totalWithFee.toFixed(2)} (includes 7% fee)`;
-                    document.getElementById('final-price').value = totalWithFee.toFixed(2);
-                } else {
-                    totalAmountElement.textContent = `Total Amount: ฿${originalPrice.toFixed(2)}`;
-                    document.getElementById('final-price').value = originalPrice.toFixed(2);
-                }
+                totalAmountElement.textContent = `Total Amount: ฿${originalPrice.toFixed(2)}`;
+                document.getElementById('final-price').value = originalPrice.toFixed(2);
             }
             
             // Initial update
             updateTotalAmount();
             
-            // Listen for changes on card type
+            // Keep listening for changes on card type (even though it doesn't change the price now)
             cardTypeSelect.addEventListener('change', updateTotalAmount);
             
             // Allow only digits in card number field
@@ -217,7 +209,7 @@ async def payment(request):
     """)
     
     return Title("Payment"), styles, validation_script, Div(
-        H1("Payment Details"),
+        H1("Payment Details", style="color :#292929;"),
         P(f"Total Amount: ฿{total_price}", id="total-amount"),
         Form(
             Div(
@@ -349,7 +341,7 @@ async def payment_confirmation(request):
     
     return Title("Payment Confirmed"), styles, Div(
         Div("✓", cls="success-icon"),
-        H1("Payment Successful!"),
+        H1("Payment Successful!", style="color :#292929;"),
         P("Your flight booking has been confirmed."),
         Div(f"Booking Reference: {booking_ref}", cls="booking-ref"),
         Form(
