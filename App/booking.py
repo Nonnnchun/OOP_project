@@ -531,16 +531,14 @@ def get_booking_table():
                 seat = next((s for s in booking.flight.plane.seats if s.seat_id == seat_id), None)
                 if seat:
                     total_price += seat.price
-
-        if hasattr(booking, 'luggage_weight') and booking.luggage_weight > 0:
-            luggage = Luggage(booking.luggage_weight)
-            total_price += luggage.calculate_price()
+                    
+            total_price = booking.payment.price
 
         luggage_info = f"{booking.luggage_weight} kg" if hasattr(booking, 'luggage_weight') and booking.luggage_weight > 0 else "No luggage"
 
         payment_info = "Not paid"
         if booking.payment and booking.payment.method:
-            payment_info = f"{booking.payment.method.method_id} ({booking.payment.method.card_number[-4:]})"
+            payment_info = f"{booking.payment.method.method_id}"
 
         action_buttons = []
         if booking.status != "Cancelled":

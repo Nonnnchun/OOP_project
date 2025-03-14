@@ -79,7 +79,7 @@ class Promocode:
 #   ACCOUNT MANAGEMENT CLASSES
 # ================================
 class UserDetail:
-    def __init__(self, firstname, lastname, points=0):
+    def __init__(self, firstname, lastname, points=500):
         self.__firstname = firstname
         self.__lastname = lastname
         self.__points = points  # Private variable for points
@@ -413,8 +413,7 @@ class Plane:
 
 class FlightRoute:
     def __init__(self, flight_id, origin_airport, destination_airport, departure_time, arrive_time, plane,
-                 available_departure_dates=None, available_arrival_dates=None,
-                 return_departure_dates=None, return_arrival_dates=None):
+                 available_departure_dates=None, available_arrival_dates=None):
         self.__flight_id = flight_id
         
         # Handle both string codes and Airport objects
@@ -438,11 +437,10 @@ class FlightRoute:
         
         self.__available_departure_dates = available_departure_dates or [departure_time]
         self.__available_arrival_dates = available_arrival_dates or [arrive_time]
-        self.__return_departure_dates = return_departure_dates or []
-        self.__return_arrival_dates = return_arrival_dates or []
+
         
         self.__outbound_seats = []
-        self.__return_seats = []
+
         
         if plane:
             for seat in plane.seats:
@@ -489,20 +487,8 @@ class FlightRoute:
         return self.__available_arrival_dates
     
     @property
-    def return_departure_dates(self):
-        return self.__return_departure_dates
-    
-    @property
-    def return_arrival_dates(self):
-        return self.__return_arrival_dates
-    
-    @property
     def outbound_seats(self):
         return self.__outbound_seats
-    
-    @property
-    def return_seats(self):
-        return self.__return_seats
     
     @flight_id.setter
     def flight_id(self, value):
@@ -536,21 +522,9 @@ class FlightRoute:
     def available_arrival_dates(self, value):
         self.__available_arrival_dates = value
     
-    @return_departure_dates.setter
-    def return_departure_dates(self, value):
-        self.__return_departure_dates = value
-    
-    @return_arrival_dates.setter
-    def return_arrival_dates(self, value):
-        self.__return_arrival_dates = value
-    
     @outbound_seats.setter
     def outbound_seats(self, value):
         self.__outbound_seats = value
-    
-    @return_seats.setter
-    def return_seats(self, value):
-        self.__return_seats = value
         
     def display_flight_info(self):
         print(f"Flight {self.flight_id}: {self.origin} -> {self.destination}")
@@ -559,27 +533,14 @@ class FlightRoute:
         if hasattr(self, 'plane') and self.plane:
             print(f"Aircraft: {self.plane.aircraft} (ID: {self.plane.plane_id})")
         
-        if self.is_round_trip():
-            print("Round trip available with return flights on:")
-            for i, date in enumerate(self.return_departure_dates):
-                print(f"  - Departure: {date}, Arrival: {self.return_arrival_dates[i]}")
-    
-    def is_round_trip(self):
-        return len(self.return_departure_dates) > 0
-    
     def get_routes(self):
         routes = [
             f"{self.origin} → {self.destination} ({self.departure_time} → {self.arrive_time})"
         ]
-        if self.is_round_trip():  
-            routes.append(f"{self.destination} → {self.origin} ({self.return_departure_dates[0]} → {self.return_arrival_dates[0]})")
         return routes
     
     def add_outbound_seats(self, seats):
         self.outbound_seats.extend(seats)
-        
-    def add_return_seats(self, seats):
-        self.return_seats.extend(seats)
 
 class Passenger:
     _id_counter = 0
@@ -706,7 +667,6 @@ class Booking:
         self.__flight = flight
         self.__outbound_seat = None
         self.__user_email = user_email
-        self.__return_seat = None
         self.__passengers = []
         self.__passenger_seats = {}
         self.__luggage_weight = 0
@@ -717,13 +677,6 @@ class Booking:
         self.__flight_date = flight.departure_time
         self.__arrival_time = flight.arrive_time
         
-        self.__return_flight_date = None
-        self.__return_arrival_time = None
-        
-        if flight.is_round_trip() and flight.return_departure_dates and flight.return_arrival_dates:
-            self.__return_flight_date = flight.return_departure_dates[0]
-            self.__return_arrival_time = flight.return_arrival_dates[0]
-        
         Booking.bookings.append(self)
     @property
     def user_email(self): return self.__user_email
@@ -733,8 +686,6 @@ class Booking:
     def flight(self): return self.__flight
     @property
     def outbound_seat(self): return self.__outbound_seat
-    @property
-    def return_seat(self): return self.__return_seat
     @property
     def passengers(self): return self.__passengers
     @property
@@ -751,14 +702,9 @@ class Booking:
     def flight_date(self): return self.__flight_date
     @property
     def arrival_time(self): return self.__arrival_time
-    @property
-    def return_flight_date(self): return self.__return_flight_date
-    @property
-    def return_arrival_time(self): return self.__return_arrival_time
-
-
     @luggage.setter
-    def luggage(self, value): self.__luggage = value
+    def luggage(self, value):
+        self.__luggage = value
     @luggage_weight.setter
     def luggage_weight(self, value): self.__luggage_weight = value
     @passenger_seats.setter
@@ -771,14 +717,8 @@ class Booking:
     def flight_date(self, value): self.__flight_date = value
     @arrival_time.setter
     def arrival_time(self, value): self.__arrival_time = value
-    @return_flight_date.setter
-    def return_flight_date(self, value): self.__return_flight_date = value
-    @return_arrival_time.setter
-    def return_arrival_time(self, value): self.__return_arrival_time = value
     @outbound_seat.setter
     def outbound_seat(self, value): self.__outbound_seat = value
-    @return_seat.setter
-    def return_seat(self, value): self.__return_seat = value
     @passengers.setter
     def passengers(self, value): self.__passengers = value
     @booking_reference.setter
@@ -863,30 +803,6 @@ class Booking:
         print(f"❌ Seat {seat_id} not found on this flight.")
         return False
     
-    def add_return_seat(self, seat_id):
-        if not self.flight.is_round_trip():
-            print("This booking is not for a round trip")
-            return False
-        
-        # First check if the seat is already booked on this specific flight
-        for booking in Booking.bookings:
-            if (booking != self and 
-                booking.flight.flight_id == self.flight.flight_id and 
-                booking.return_seat and 
-                booking.return_seat.seat_id == seat_id and
-                booking.status != "Cancelled"):
-                print(f"Return seat {seat_id} is already booked on this flight")
-                return False
-                
-        # If not already booked, proceed with booking
-        for seat in self.flight.return_seats:
-            if seat.seat_id == seat_id and seat.is_available():
-                self.return_seat = seat
-                seat.update_seat_status(False)  # Mark as unavailable
-                print(f"Added return seat: {seat_id}")
-                return True
-        return False
-    
     def create_payment(self, price):
         self.payment = Payment(price)
         print(f"Created payment: {price}")
@@ -947,17 +863,8 @@ class Booking:
         self.arrival_time = arrival_time or self.flight.arrive_time
         return True
         
-    def set_return_flight_dates(self, return_flight_date, return_arrival_time=None):
-        if not self.flight.is_round_trip():
-            print("This booking is not for a round trip")
-            return False
-            
-        self.return_flight_date = return_flight_date
-        self.return_arrival_time = return_arrival_time or self.flight.return_arrival_dates[0]
-        return True
     
-    def edit(self, flight_date=None, arrival_time=None, outbound_seat=None, 
-             return_flight_date=None, return_arrival_time=None, return_seat=None):
+    def edit(self, flight_date=None, arrival_time=None, outbound_seat=None):
         # Update outbound details
         if flight_date:
             self.flight_date = flight_date
@@ -976,24 +883,6 @@ class Booking:
                 self.add_seat(outbound_seat)
         
         # Update return details for round trips
-        if self.flight.is_round_trip():
-            if return_flight_date:
-                self.return_flight_date = return_flight_date
-            if return_arrival_time:
-                self.return_arrival_time = return_arrival_time
-            if return_seat:
-                # Free up previous seat
-                if self.return_seat:
-                    self.return_seat.update_seat_status(True)
-                # Set new seat
-                if isinstance(return_seat, Seat):
-                    self.return_seat = return_seat
-                    return_seat.update_seat_status(False)
-                else:
-                    # Handle case where seat_id is passed instead of Seat object
-                    self.add_return_seat(return_seat)
-        
-        return True
     
     def cancel(self):
         if self.status == "Paid":
@@ -1196,16 +1085,7 @@ class Controller:
                 alt_dates.append(alt_date.strftime("%Y-%m-%d %H:%M"))
                 alt_arrival = alt_date + timedelta(hours=flight_duration)
                 alt_arrivals.append(alt_arrival.strftime("%Y-%m-%d %H:%M"))
-            
-            # Add return dates for some flights (50% chance)
-            return_dates = []
-            return_arrivals = []
-            if randint(0, 1) == 1:
-                for i in range(1, 3):  # Add 2 return date options
-                    return_date = departure_date + timedelta(days=7+i*3)  # Return dates
-                    return_dates.append(return_date.strftime("%Y-%m-%d %H:%M"))
-                    return_arrival = return_date + timedelta(hours=flight_duration)
-                    return_arrivals.append(return_arrival.strftime("%Y-%m-%d %H:%M"))
+
             
             flight = FlightRoute(
                 self.generate_flight_id(), 
@@ -1215,23 +1095,8 @@ class Controller:
                 arrive_time, 
                 plane,
                 [departure_time] + alt_dates,
-                [arrive_time] + alt_arrivals,
-                return_dates,
-                return_arrivals
+                [arrive_time] + alt_arrivals
             )
-            
-            # Add placeholder return seats if it's a round trip
-            if flight.is_round_trip():
-                # Create independent seat objects for the return flight
-                return_seats = []
-                for seat in plane.seats:
-                    return_seat = Seat(
-                        f"R-{seat.seat_id}", 
-                        seat.seat_type, 
-                        seat.price
-                    )
-                    return_seats.append(return_seat)
-                flight.add_return_seats(return_seats)
             
             self.flights.append(flight)
     
@@ -1348,20 +1213,6 @@ def generate_comprehensive_flight_routes(controller):
                 "2025-04-26 05:00"
             ]
             
-            # Create return departure options (10 days after outbound)
-            return_departure_dates = [
-                "2025-04-20 14:00",
-                "2025-04-25 14:00",
-                "2025-04-30 14:00"
-            ]
-            
-            # Create return arrival options
-            return_arrival_dates = [
-                "2025-04-21 05:00",
-                "2025-04-26 05:00",
-                "2025-05-01 05:00"
-            ]
-            
             # Create the FlightRoute
             new_flight = FlightRoute(
                 flight_id,
@@ -1371,26 +1222,8 @@ def generate_comprehensive_flight_routes(controller):
                 base_arrival,
                 plane,
                 departure_dates,
-                arrival_dates,
-                return_departure_dates,
-                return_arrival_dates
+                arrival_dates
             )
-            
-            # Create independent return seats for the round trip
-            if new_flight.is_round_trip():
-                return_seats = []
-                for seat in plane.seats:
-                    # Create a completely new seat object for the return flight
-                    return_seat = Seat(
-                        f"R-{seat.seat_id}",
-                        seat.seat_type,
-                        seat.price
-                    )
-                    return_seats.append(return_seat)
-                
-                # Add the return seats to the flight
-                new_flight.add_return_seats(return_seats)
-            
             # Add the flight to our collection
             created_flights.append(new_flight)
             
